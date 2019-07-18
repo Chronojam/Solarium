@@ -1,4 +1,4 @@
-package planet
+package properties
 
 import "log"
 

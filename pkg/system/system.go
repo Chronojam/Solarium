@@ -17,7 +17,7 @@ type system struct {
 }
 
 func init() {
-	events.DEBUG_MODE = false
+	events.DEBUG_MODE = true
 }
 
 // New returns a new solar system
@@ -29,7 +29,6 @@ func New() *system {
 	eventChan := make(chan interfaces.SystemEvent)
 	go func() {
 		eventChan <- events.RandomCalm()
-		eventChan <- &events.EquilibriumConstant{}
 	}()
 	return &system{
 		id:        uuid.String(),
@@ -40,18 +39,14 @@ func New() *system {
 func (s *system) Simulate() {
 	for {
 		// Print out the state of the system
-		log.Printf("State Of System: %s:\n", s.id)
-		for _, b := range s.bodies {
-			log.Printf("%#v", b.Properties())
-		}
 		s.NextEvent(s.eventChan)
 	}
 }
 
 func (s *system) NextEvent(stream chan interfaces.SystemEvent) {
 	e := <-stream
+	log.Printf(e.Desc())
 	e.Apply(s.bodies)
-	log.Printf("Event: %s", e.Description())
 	go func() {
 		t := time.NewTimer(e.Duration())
 		<-t.C

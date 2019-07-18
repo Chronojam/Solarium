@@ -8,9 +8,9 @@ import (
 
 // Calm, nothing is happening right now.
 type Calm struct {
-	expiresAt  time.Time
-	TimeLength time.Duration
-	Desc       string
+	expiresAt   time.Time
+	TimeLength  time.Duration
+	Description string
 }
 
 func (c *Calm) Apply(p []interfaces.PlanetaryBody) {}
@@ -21,9 +21,9 @@ func (c *Calm) Duration() time.Duration {
 func (c *Calm) NextEvent() interfaces.SystemEvent {
 	return RandomEvent()
 }
-func (c *Calm) Description() string {
-	if c.Desc != "" {
-		return c.Desc
+func (c *Calm) Desc() string {
+	if c.Description != "" {
+		return c.Description
 	}
-	return "all is calm"
+	return "All is calm."
 }
