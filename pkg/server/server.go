@@ -77,14 +77,14 @@ func (g *Server) GameUpdate(req *proto.GameUpdateRequest, stream proto.Solarium_
 	}
 
 	// Continully send updates to the client as long as this connection is open.
-	/*for {
+	for {
 		select {
 		case notification := <-me:
 			if err := stream.Send(&proto.GameUpdateResponse{Notification: notification}); err != nil {
 				log.Printf("%v", err)
 			}
 		}
-	}*/
+	}
 
 	return nil
 }
