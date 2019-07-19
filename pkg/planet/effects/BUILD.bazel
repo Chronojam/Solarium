@@ -6,6 +6,6 @@ go_library(
         "interfaces.go",
         "solarStorm.go",
     ],
-    importpath = "github.com/example/project/pkg/planet/effects",
+    importpath = "github.com/chronojam/solarium/pkg/planet/effects",
     visibility = ["//visibility:public"],
 )

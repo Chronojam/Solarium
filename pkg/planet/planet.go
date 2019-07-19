@@ -5,13 +5,14 @@ import (
 
 	"github.com/chronojam/solarium/pkg/planet/effects"
 	"github.com/chronojam/solarium/pkg/planet/hardware"
+	"github.com/chronojam/solarium/pkg/planet/namegenerator"
 	"github.com/chronojam/solarium/pkg/system/interfaces"
 )
 
 // planet represents the world on which a given player controls.
 type planet struct {
-	name    string
-	effects []interfaces.PlanetaryEffect
+	name, owner string
+	effects     []interfaces.PlanetaryEffect
 
 	Temperature   int
 	Radioactivity int
@@ -29,7 +30,10 @@ func New(name string) *planet {
 
 // NewRandom returns a new planet with a random set
 // of properties.
-func NewRandom(name string) *planet {
+func NewRandom(name, owner string) *planet {
+	if name == "" {
+		name = namegenerator.GenerateNew()
+	}
 	MinDistance := 1
 	MaxDistance := 50 - MinDistance
 

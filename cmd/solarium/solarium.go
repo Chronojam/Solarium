@@ -1,15 +1,23 @@
 package main
 
 import (
-	"github.com/chronojam/solarium/pkg/planet"
-	"github.com/chronojam/solarium/pkg/system"
+	"log"
+	"net"
+
+	"github.com/chronojam/solarium/pkg/server"
+	proto "github.com/chronojam/solarium/proto"
+	"google.golang.org/grpc"
 )
 
 func main() {
-	s := system.New()
-	s.AddBody(
-		planet.NewRandom("The Quickening Of Doom"),
-	)
-	s.Simulate()
+	grpc.EnableTracing = true
+	conn, err := net.Listen("tcp", ":8081")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 
+	g := grpc.NewServer()
+	proto.RegisterSolariumServer(g, server.New())
+
+	log.Fatalf("%v", g.Serve(conn))
 }

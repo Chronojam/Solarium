@@ -6,6 +6,6 @@ go_library(
         "properties.go",
         "v1.go",
     ],
-    importpath = "github.com/example/project/pkg/properties",
+    importpath = "github.com/chronojam/solarium/pkg/properties",
     visibility = ["//visibility:public"],
 )

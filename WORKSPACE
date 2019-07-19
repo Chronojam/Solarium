@@ -16,8 +16,8 @@ load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
 protobuf_deps()
 
-
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 http_archive(
     name = "build_stack_rules_proto",
     urls = ["https://github.com/stackb/rules_proto/archive/b93b544f851fdcd3fc5c3d47aee3b7ca158a8841.tar.gz"],
@@ -31,24 +31,41 @@ csharp_proto_compile()
 
 # Register C# toolchains.
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
 git_repository(
     name = "io_bazel_rules_dotnet",
     remote = "https://github.com/bazelbuild/rules_dotnet",
     tag = "0.0.3",
 )
 
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_register_sdk", "net_register_sdk", "mono_register_sdk",
-    "dotnet_register_toolchains", "dotnet_repositories", "nuget_package")
+load(
+    "@io_bazel_rules_dotnet//dotnet:defs.bzl",
+    "core_register_sdk",
+    "net_register_sdk",
+    "mono_register_sdk",
+    "dotnet_register_toolchains",
+    "dotnet_repositories",
+    "nuget_package",
+)
 
 dotnet_register_toolchains()
+
 dotnet_repositories()
+
 # For .NET Core:
-core_register_sdk("v2.1.502", name = "core_sdk")
+core_register_sdk(
+    "v2.1.502",
+    name = "core_sdk",
+)
+
 # For .NET Framework:
-net_register_sdk("net471", name = "net_sdk")
+net_register_sdk(
+    "net471",
+    name = "net_sdk",
+)
+
 # For Mono:
 mono_register_sdk()
-
 
 # Register Golang toolchains.
 http_archive(
@@ -73,7 +90,9 @@ load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_to
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
 go_rules_dependencies()
+
 go_register_toolchains()
+
 gazelle_dependencies()
 
 # Golang Dependencies
@@ -111,4 +130,11 @@ go_repository(
     importpath = "golang.org/x/text",
     sum = "h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=",
     version = "v0.3.2",
+)
+
+go_repository(
+    name = "com_github_google_uuid",
+    importpath = "github.com/google/uuid",
+    sum = "h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=",
+    version = "v1.1.1",
 )

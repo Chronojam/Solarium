@@ -2,10 +2,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "go_default_library",
-    srcs = [
-        "heatshields.go",
-        "interfaces.go",
-    ],
-    importpath = "github.com/chronojam/solarium/pkg/planet/hardware",
+    srcs = ["namegenerator.go"],
+    importpath = "github.com/chronojam/solarium/pkg/planet/namegenerator",
     visibility = ["//visibility:public"],
 )

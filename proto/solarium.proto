@@ -7,16 +7,16 @@ service Solarium {
     rpc GameUpdate(GameUpdateRequest) returns (stream GameUpdateResponse) {}
 }
 
-
 message JoinGameRequest {
     string GameID = 1;
 }
 
 message JoinGameResponse {
     string SecretKey = 1;
+    string PlanetName = 2;
 }
 
 message GameUpdateRequest {};
 message GameUpdateResponse {
-    string Hello =1;
+    string Notification =1;
 };

@@ -1,7 +1,6 @@
 package system
 
 import (
-	"log"
 	"time"
 
 	"github.com/chronojam/solarium/pkg/events"
@@ -9,11 +8,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type system struct {
+type System struct {
 	id     string
 	bodies []interfaces.PlanetaryBody
 
-	eventChan chan interfaces.SystemEvent
+	eventChan        chan interfaces.SystemEvent
+	NotificationChan chan string
 }
 
 func init() {
@@ -21,7 +21,7 @@ func init() {
 }
 
 // New returns a new solar system
-func New() *system {
+func New() *System {
 	uuid, err := uuid.NewRandom()
 	if err != nil {
 		panic(err)
@@ -30,22 +30,23 @@ func New() *system {
 	go func() {
 		eventChan <- events.RandomCalm()
 	}()
-	return &system{
-		id:        uuid.String(),
-		eventChan: eventChan,
+	return &System{
+		id:               uuid.String(),
+		eventChan:        eventChan,
+		NotificationChan: make(chan string),
 	}
 }
 
-func (s *system) Simulate() {
+func (s *System) Simulate() {
 	for {
 		// Print out the state of the system
 		s.NextEvent(s.eventChan)
 	}
 }
 
-func (s *system) NextEvent(stream chan interfaces.SystemEvent) {
+func (s *System) NextEvent(stream chan interfaces.SystemEvent) {
 	e := <-stream
-	log.Printf(e.Desc())
+	s.NotificationChan <- e.Desc()
 	e.Apply(s.bodies)
 	go func() {
 		t := time.NewTimer(e.Duration())
@@ -57,6 +58,6 @@ func (s *system) NextEvent(stream chan interfaces.SystemEvent) {
 }
 
 // AddBody adds a new planetaryBody to this system
-func (s *system) AddBody(p interfaces.PlanetaryBody) {
+func (s *System) AddBody(p interfaces.PlanetaryBody) {
 	s.bodies = append(s.bodies, p)
 }

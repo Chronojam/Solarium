@@ -3,11 +3,12 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "go_default_library",
     srcs = ["planet.go"],
-    importpath = "github.com/example/project/pkg/planet",
+    importpath = "github.com/chronojam/solarium/pkg/planet",
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/planet/effects:go_default_library",
         "//pkg/planet/hardware:go_default_library",
+        "//pkg/planet/namegenerator:go_default_library",
         "//pkg/system/interfaces:go_default_library",
     ],
 )
