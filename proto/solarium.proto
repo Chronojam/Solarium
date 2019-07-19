@@ -1,0 +1,22 @@
+syntax = "proto3";
+option go_package="github.com/chronojam/solarium/proto";
+package solarium;
+
+service Solarium {
+    rpc JoinGame(JoinGameRequest) returns (JoinGameResponse) {}
+    rpc GameUpdate(GameUpdateRequest) returns (stream GameUpdateResponse) {}
+}
+
+
+message JoinGameRequest {
+    string GameID = 1;
+}
+
+message JoinGameResponse {
+    string SecretKey = 1;
+}
+
+message GameUpdateRequest {};
+message GameUpdateResponse {
+    string Hello =1;
+};
