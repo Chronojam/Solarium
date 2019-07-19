@@ -38,6 +38,14 @@ git_repository(
     tag = "0.0.3",
 )
 
+http_archive (
+    name = "io_bazel_rules_dotnet",
+    urls = [
+        "https://github.com/bazelbuild/rules_dotnet/archive/0.0.3.tar.gz",
+    ],
+    strip_prefix = "rules_dotnet-0.0.3",
+)
+
 load(
     "@io_bazel_rules_dotnet//dotnet:defs.bzl",
     "core_register_sdk",
