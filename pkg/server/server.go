@@ -68,12 +68,8 @@ func (g *Server) JoinGame(ctx context.Context, req *proto.JoinGameRequest) (*pro
 func (g *Server) GameUpdate(req *proto.GameUpdateRequest, stream proto.Solarium_GameUpdateServer) error {
 	// Keep this guy open. Continually read from the notification channel and send it off
 	// to whoever is connected.
-	log.Printf("Hello World")
 	me := make(chan string)
-	log.Printf("A")
 	g.Listeners = append(g.Listeners, me)
-	log.Printf("B")
-	log.Printf("%v", len(g.Listeners))
 
 	// Send all the current history first.
 	for _, h := range g.History {
@@ -81,13 +77,11 @@ func (g *Server) GameUpdate(req *proto.GameUpdateRequest, stream proto.Solarium_
 			me <- h
 		}()
 	}
-	log.Printf("Got New Connection!")
 
 	// Continully send updates to the client as long as this connection is open.
 	for {
 		select {
 		case notification := <-me:
-			log.Printf("Sending Gubbins down the streams")
 			if err := stream.Send(&proto.GameUpdateResponse{Notification: notification}); err != nil {
 				log.Printf("%v", err)
 			}

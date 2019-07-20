@@ -30,13 +30,6 @@ load("@build_stack_rules_proto//csharp:deps.bzl", "csharp_proto_compile")
 csharp_proto_compile()
 
 # Register C# toolchains.
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-
-git_repository(
-    name = "io_bazel_rules_dotnet",
-    remote = "https://github.com/bazelbuild/rules_dotnet",
-    tag = "0.0.3",
-)
 
 http_archive (
     name = "io_bazel_rules_dotnet",
@@ -76,15 +69,15 @@ net_register_sdk(
 mono_register_sdk()
 
 # Register Golang toolchains.
+
 http_archive(
     name = "io_bazel_rules_go",
     urls = [
-        "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/rules_go/releases/download/0.19.0/rules_go-0.19.0.tar.gz",
-        "https://github.com/bazelbuild/rules_go/releases/download/0.19.0/rules_go-0.19.0.tar.gz",
+        "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/rules_go/releases/download/0.19.1/rules_go-0.19.1.tar.gz",
+        "https://github.com/bazelbuild/rules_go/releases/download/0.19.1/rules_go-0.19.1.tar.gz",
     ],
-    sha256 = "9fb16af4d4836c8222142e54c9efa0bb5fc562ffc893ce2abeac3e25daead144",
+    sha256 = "8df59f11fb697743cbb3f26cfb8750395f30471e9eabde0d174c3aebc7a1cd39",
 )
-
 http_archive(
     name = "bazel_gazelle",
     urls = [
@@ -93,15 +86,41 @@ http_archive(
     ],
     sha256 = "be9296bfd64882e3c08e3283c58fcb461fa6dd3c171764fcc4cf322f60615a9b",
 )
+# Test
+#http_archive(
+#    name = "bazel_gazelle",
+#    urls = [
+#        "https://github.com/bazelbuild/bazel-gazelle/archive/ad91be37a363bb4affe3b50ecd4cabc92e83aa4b.zip",
+#    ],
+#    strip_prefix = "bazel-gazelle-ad91be37a363bb4affe3b50ecd4cabc92e83aa4b",
+#    #sha256 = "",
+#)
 
 load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
 go_rules_dependencies()
-
 go_register_toolchains()
 
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
+
 gazelle_dependencies()
+
+# Gazelle deps, unknown why these do not get created
+# on windows?
+#go_repository(
+#    name = "com_github_pelletier_go_toml",
+#    importpath = "github.com/pelletier/go-toml",
+#    sum = "h1:T5zMGML61Wp+FlcbWjRDT7yAxhJNAiPPLOFECq181zc=",
+#    version = "v1.2.0",
+#)
+
+#go_repository(
+#    name = "com_github_pmezard_go_difflib",
+#    importpath = "github.com/pmezard/go-difflib",
+#    sum = "h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=",
+#    version = "v1.0.0",
+#)
+
 
 # Golang Dependencies
 
