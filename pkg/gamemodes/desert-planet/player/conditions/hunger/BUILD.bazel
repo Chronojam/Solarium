@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["hunger.go"],
+    importpath = "github.com/chronojam/solarium/pkg/gamemodes/desert-planet/player/conditions/hunger",
+    visibility = ["//visibility:public"],
+    deps = ["//pkg/gamemodes/desert-planet/player/conditions:go_default_library"],
+)
