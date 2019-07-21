@@ -11,12 +11,13 @@ http_archive(
     strip_prefix = "protobuf-3.9.0",
     urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.9.0.zip"],
 )
-
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
 protobuf_deps()
-
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http_archive(
+    name = "com_github_grpc_grpc",
+    urls = ["https://github.com/grpc/grpc/archive/v1.22.0.zip"],
+    strip_prefix = "grpc-1.22.0",
+)
 
 http_archive(
     name = "build_stack_rules_proto",
@@ -29,9 +30,13 @@ load("@build_stack_rules_proto//csharp:deps.bzl", "csharp_proto_compile")
 
 csharp_proto_compile()
 
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
+
+grpc_deps()
+
 # Register C# toolchains.
 
-http_archive (
+http_archive(
     name = "io_bazel_rules_dotnet",
     urls = [
         "https://github.com/bazelbuild/rules_dotnet/archive/0.0.3.tar.gz",
@@ -68,6 +73,7 @@ net_register_sdk(
 # For Mono:
 mono_register_sdk()
 
+
 # Register Golang toolchains.
 
 http_archive(
@@ -78,6 +84,7 @@ http_archive(
     ],
     sha256 = "8df59f11fb697743cbb3f26cfb8750395f30471e9eabde0d174c3aebc7a1cd39",
 )
+
 http_archive(
     name = "bazel_gazelle",
     urls = [
@@ -99,6 +106,7 @@ http_archive(
 load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
 
 go_rules_dependencies()
+
 go_register_toolchains()
 
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
@@ -120,7 +128,6 @@ gazelle_dependencies()
 #    sum = "h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=",
 #    version = "v1.0.0",
 #)
-
 
 # Golang Dependencies
 
@@ -164,4 +171,25 @@ go_repository(
     importpath = "github.com/google/uuid",
     sum = "h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=",
     version = "v1.1.1",
+)
+
+go_repository(
+    name = "com_github_bwmarrin_discordgo",
+    importpath = "github.com/bwmarrin/discordgo",
+    sum = "h1:kMED/DB0NR1QhRcalb85w0Cu3Ep2OrGAqZH1R5awQiY=",
+    version = "v0.19.0",
+)
+
+go_repository(
+    name = "org_golang_x_crypto",
+    importpath = "golang.org/x/crypto",
+    sum = "h1:HuIa8hRrWRSrqYzx1qI49NNxhdi2PrY7gxVSq1JjLDc=",
+    version = "v0.0.0-20190701094942-4def268fd1a4",
+)
+
+go_repository(
+    name = "com_github_gorilla_websocket",
+    importpath = "github.com/gorilla/websocket",
+    sum = "h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH/Q=",
+    version = "v1.4.0",
 )

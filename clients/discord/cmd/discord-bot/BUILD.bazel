@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "github.com/chronojam/solarium/clients/discord/cmd/discord-bot",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//clients/discord/pkg/discord:go_default_library",
+        "//clients/discord/pkg/handlers/newgame:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "discord-bot",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)

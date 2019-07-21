@@ -30,3 +30,10 @@ csharp_proto_compile(
     name = "proto_csharp_proto",
     deps = [":proto_proto"],
 )
+
+load("@build_stack_rules_proto//csharp:csharp_grpc_compile.bzl", "csharp_grpc_compile")
+
+csharp_grpc_compile(
+    name = "proto_csharp_grpc",
+    deps = [":proto_proto"],
+)
