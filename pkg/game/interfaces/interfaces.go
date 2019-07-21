@@ -17,3 +17,7 @@ type PlanetaryEffect interface {
 	Name() string
 	Desc() string
 }
+
+type Player interface {
+	Id() string
+}

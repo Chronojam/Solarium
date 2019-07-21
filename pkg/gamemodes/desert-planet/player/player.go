@@ -1,7 +1,7 @@
 package player
 
 import (
-	"github.com/chronojam/Solarium/pkg/gamemodes/desert-planet/player/conditions"
+	"github.com/chronojam/solarium/pkg/gamemodes/desert-planet/player/conditions"
 )
 
 type condition interface {
@@ -23,4 +23,8 @@ type Player struct {
 
 	Conditions []condition
 	Job        job
+}
+
+func (p *Player) Id() string {
+	return p.ID
 }

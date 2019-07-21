@@ -1,6 +1,6 @@
 package thirst
 
-import "github.com/chronojam/Solarium/pkg/gamemodes/desert-planet/player/conditions"
+import "github.com/chronojam/solarium/pkg/gamemodes/desert-planet/player/conditions"
 
 const (
 	defaultThirstGained = 2

@@ -1,7 +1,7 @@
 package hunger
 
 import (
-	"github.com/chronojam/Solarium/pkg/gamemodes/desert-planet/player/conditions"
+	"github.com/chronojam/solarium/pkg/gamemodes/desert-planet/player/conditions"
 )
 
 const defaultHungerGained = 1

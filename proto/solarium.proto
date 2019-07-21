@@ -3,20 +3,44 @@ option go_package="github.com/chronojam/solarium/proto";
 package solarium;
 
 service Solarium {
+    rpc NewGame(NewGameRequest) returns (NewGameResponse) {}
     rpc JoinGame(JoinGameRequest) returns (JoinGameResponse) {}
     rpc GameUpdate(GameUpdateRequest) returns (stream GameUpdateResponse) {}
+    rpc GlobalUpdate(GlobalUpdateRequest) returns (stream GlobalUpdateResponse) {}
+    rpc DoAction(DoActionRequest) returns (DoActionResponse) {}
 }
 
-message JoinGameRequest {
+message NewGameRequest {
+    string Gamemode = 1;
+    int64 Difficulty = 2;
+}
+message NewGameResponse {
     string GameID = 1;
 }
-
+message JoinGameRequest {
+    string GameID = 1;
+    string Name = 2;
+}
 message JoinGameResponse {
     string SecretKey = 1;
-    string PlanetName = 2;
 }
 
-message GameUpdateRequest {};
-message GameUpdateResponse {
-    string Notification =1;
+message GameUpdateRequest {
+    string GameID = 1;
 };
+message GameUpdateResponse {
+    string Notification = 1;
+};
+
+message GlobalUpdateRequest {};
+message GlobalUpdateResponse {
+    string Notification = 1;
+};
+
+message DoActionRequest {
+    string SecretKey = 1;
+    string GameID = 2;
+    string Action = 3;
+};
+
+message DoActionResponse {};

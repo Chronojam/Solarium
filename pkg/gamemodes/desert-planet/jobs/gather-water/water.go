@@ -16,7 +16,7 @@ func New(useFuel bool) *Water {
 	}
 	return &Water{
 		RemainingTime: DistanceTillWater,
-		AmountGained:  rand.Intn(3),
+		AmountGained:  rand.Intn(3) + 1,
 	}
 }
 
