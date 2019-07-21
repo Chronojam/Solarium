@@ -1,1 +1,0 @@
-../../bazel-bin/proto/proto_csharp_grpc/Solarium.cs

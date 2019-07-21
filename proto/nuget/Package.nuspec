@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Solarium</id>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <authors>Chronojam</authors>
     <owners>calliope@chronojam.co.uk</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

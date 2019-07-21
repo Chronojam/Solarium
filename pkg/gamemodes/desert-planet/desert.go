@@ -174,7 +174,9 @@ func (d *DesertGamemode) Setup() {
 }
 
 func (d *DesertGamemode) NextEvent() interfaces.GameEvent {
-	return <-d.EventStream
+	e := <-d.EventStream
+	log.Printf("Fetched %v from estream", e.Description)
+	return e
 }
 
 // Do a single simulation 'tick'
@@ -266,7 +268,7 @@ func (d *DesertGamemode) Simulate() {
 
 func (d *DesertGamemode) SendEvent(des string) {
 	go func() {
-		log.Printf("Sending Event: %v", des)
+		//log.Printf("Sending Event: %v", des)
 		d.EventStream <- interfaces.GameEvent{
 			Description: des,
 		}

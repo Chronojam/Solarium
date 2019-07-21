@@ -16,7 +16,7 @@ import (
 
 var (
 	AvaliableGameModes = map[string]func(diff int) Gamemode{
-		"Desert-Planet": func(diff int) Gamemode {
+		"DesertPlanet": func(diff int) Gamemode {
 			return desert.New(diff)
 		},
 	}
@@ -69,9 +69,9 @@ func New() *Server {
 	}
 }*/
 
-func (g *Server) DispatchToGameID(id, message string) {
+func (g *Server) DispatchToGameID(idi, message string) {
 	for id, listeners := range g.Listeners {
-		if id == id {
+		if id == idi {
 			for _, lis := range listeners {
 				go func() {
 					lis <- message
@@ -84,7 +84,7 @@ func (g *Server) DispatchToGameID(id, message string) {
 func (g *Server) NewGame(ctx context.Context, req *proto.NewGameRequest) (*proto.NewGameResponse, error) {
 	gm, ok := AvaliableGameModes[req.Gamemode]
 	if !ok {
-		return nil, nil
+		return &proto.NewGameResponse{}, nil
 	}
 	guid, err := uuid.NewRandom()
 	if err != nil {
@@ -103,7 +103,7 @@ func (g *Server) JoinGame(ctx context.Context, req *proto.JoinGameRequest) (*pro
 	// Create a new body for this player, and give them a special token so they can interact with it.
 	game, ok := g.Games[req.GameID]
 	if !ok {
-		return nil, nil
+		return &proto.JoinGameResponse{}, nil
 	}
 	p, err := game.Join(req.Name)
 	if err != nil {
@@ -181,6 +181,7 @@ func (g *Server) GameUpdate(req *proto.GameUpdateRequest, stream proto.Solarium_
 	}
 	cuuid := cid.String()
 	g.Listeners[req.GameID][cuuid] = me
+	log.Printf("Stream %v", cuuid)
 
 	// Continully send updates to the client as long as this connection is open.
 	for {
