@@ -1,5 +1,6 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_library")
 
 proto_library(
     name = "proto_proto",
@@ -25,15 +26,25 @@ go_library(
 
 # C#
 load("@build_stack_rules_proto//csharp:csharp_proto_compile.bzl", "csharp_proto_compile")
-
-csharp_proto_compile(
-    name = "proto_csharp_proto",
-    deps = [":proto_proto"],
-)
+load("@build_stack_rules_proto//csharp:csharp_grpc_library.bzl", "csharp_grpc_library")
 
 load("@build_stack_rules_proto//csharp:csharp_grpc_compile.bzl", "csharp_grpc_compile")
 
 csharp_grpc_compile(
-    name = "proto_csharp_grpc",
+    name = "csharp_grpc",
     deps = [":proto_proto"],
+)
+
+core_library(
+    name = "csharp_grpc_lib",
+    srcs = [":csharp_grpc"],
+    deps = [
+        "@google.protobuf//:netstandard2.0_net",
+        "@io_bazel_rules_dotnet//dotnet/stdlib.core:system.io.dll",
+        "@grpc.core//:netstandard2.0_net",
+        "@grpc.core.api//:netstandard2.0_net",
+        "@system.interactive.async//:netstandard2.0_net",
+        "@io_bazel_rules_dotnet//dotnet/stdlib.core:netstandard.library.dll",
+    ],
+    visibility = ["//visibility:public"],
 )
