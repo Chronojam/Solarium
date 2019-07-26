@@ -123,7 +123,7 @@ func (g *Server) StartGame(id string) {
 		log.Printf("Doing Setup()")
 		game.Setup()
 		for {
-			time.Sleep(time.Second * 1)
+			time.Sleep(time.Second * 5)
 			game.Simulate()
 		}
 	}()

@@ -105,7 +105,8 @@ type DesertGamemode struct {
 
 func New(difficulty int) *DesertGamemode {
 	return &DesertGamemode{
-		Difficulty: difficulty,
+		Difficulty:  difficulty,
+		EventStream: make(chan interfaces.GameEvent),
 	}
 }
 
@@ -174,8 +175,11 @@ func (d *DesertGamemode) Setup() {
 }
 
 func (d *DesertGamemode) NextEvent() interfaces.GameEvent {
+	log.Printf("Trying to get next event")
 	e := <-d.EventStream
-	log.Printf("Fetched %v from estream", e.Description)
+	log.Printf(e.Description)
+
+	//log.Printf("Fetched %v from estream", e.Description)
 	return e
 }
 
@@ -267,10 +271,7 @@ func (d *DesertGamemode) Simulate() {
 }
 
 func (d *DesertGamemode) SendEvent(des string) {
-	go func() {
-		//log.Printf("Sending Event: %v", des)
-		d.EventStream <- interfaces.GameEvent{
-			Description: des,
-		}
-	}()
+	d.EventStream <- interfaces.GameEvent{
+		Description: des,
+	}
 }
