@@ -2,7 +2,6 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_library", "DOTNET_CORE_FRAMEWORKS")
 
-
 proto_library(
     name = "proto_proto",
     srcs = ["solarium.proto"],
@@ -39,7 +38,7 @@ csharp_grpc_compile(
 )
 
 [core_library(
-    name = "csharp_grpc_lib_{}".format(framework),
+    name = "solarium_csharp_coreapp_{}".format(framework),
     srcs = [
         ":csharp_grpc",
         "//pkg/gamemodes/desert-planet/proto:csharp_grpc",
@@ -52,6 +51,24 @@ csharp_grpc_compile(
         "@grpc.core//:netcoreapp2.1_core",
         "@grpc.core.api//:netcoreapp2.1_core",
         "@system.interactive.async//:netcoreapp2.1_core",
+    ],
+    visibility = ["//visibility:public"],
+) for framework in DOTNET_CORE_FRAMEWORKS]
+
+[core_library(
+    name = "solarium_csharp_netstandard_{}".format(framework),
+    srcs = [
+        ":csharp_grpc",
+        "//pkg/gamemodes/desert-planet/proto:csharp_grpc",
+    ],
+    dotnet_context_data = "@io_bazel_rules_dotnet//:core_context_data_{}".format(framework),
+    deps = [
+        "@io_bazel_rules_dotnet//dotnet/stdlib.core/{}:system.io.dll".format(framework),
+        "@io_bazel_rules_dotnet//dotnet/stdlib.core/{}:netstandard.library.dll".format(framework),
+        "@google.protobuf//:netstandard2.0_net",
+        "@grpc.core//:netstandard2.0_net",
+        "@grpc.core.api//:netstandard2.0_net",
+        "@system.interactive.async//:netstandard2.0_net",
     ],
     visibility = ["//visibility:public"],
 ) for framework in DOTNET_CORE_FRAMEWORKS]

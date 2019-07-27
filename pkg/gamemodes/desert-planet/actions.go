@@ -11,7 +11,7 @@ import (
 func (d *DesertGamemode) gatherWater(player *solarium.Player) {
 	// How much water did we gather?, 1-4
 	q := rand.Intn(3) + 1
-	d.Water += q
+	d.GameStatus.Water += int32(q)
 	d.EventStream <- &solarium.GameEvent{
 		Name: "Gathered Water",
 		Desc: fmt.Sprintf("%s gathered %v units of water", player.Name, q),
@@ -29,7 +29,7 @@ func (d *DesertGamemode) gatherWater(player *solarium.Player) {
 func (d *DesertGamemode) gatherFood(player *solarium.Player) {
 	// How much food did we gather?, 1-4
 	q := rand.Intn(3) + 1
-	d.Food += q
+	d.GameStatus.Food += int32(q)
 	d.EventStream <- &solarium.GameEvent{
 		Name: "Gathered Food",
 		Desc: fmt.Sprintf("%s gathered %v units of food", player.Name, q),
@@ -47,7 +47,7 @@ func (d *DesertGamemode) gatherFood(player *solarium.Player) {
 func (d *DesertGamemode) gatherComponent(player *solarium.Player) {
 	// How much compoonents did we gather?, 1-2
 	q := rand.Intn(1) + 1
-	d.Components += q
+	d.GameStatus.Components += int32(q)
 	d.EventStream <- &solarium.GameEvent{
 		Name: "Gathered Components",
 		Desc: fmt.Sprintf("%s gathered %v units of components", player.Name, q),

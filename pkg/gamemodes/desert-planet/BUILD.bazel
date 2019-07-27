@@ -5,7 +5,6 @@ go_library(
     srcs = [
         "actions.go",
         "desert.go",
-        "playerstatus.go",
     ],
     importpath = "github.com/chronojam/solarium/pkg/gamemodes/desert-planet",
     visibility = ["//visibility:public"],

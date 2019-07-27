@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Solarium</id>
-    <version>1.0.7</version>
+    <version>1.1.2</version>
     <authors>Chronojam</authors>
     <owners>calliope@chronojam.co.uk</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -17,6 +17,10 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bazel-bin\proto\csharp_grpc_lib_**.dll" target="lib/netcoreapp" />
+    <!-- netstandard 2.0, only support v2.1.503-->
+    <file src="bazel-bin\proto\solarium_csharp_netstandard_v2.1.503.dll" target="lib/netstandard2.0/" />
+    <!-- netcoreapp 2.1 & 2.2 -->
+    <file src="bazel-bin\proto\solarium_csharp_coreapp_v2.2.101.dll" target="lib/netcoreapp2.2/" />
+    <file src="bazel-bin\proto\solarium_csharp_coreapp_v2.1.503.dll" target="lib/netcoreapp2.1/" />
   </files>
 </package>

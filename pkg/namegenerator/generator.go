@@ -1,6 +1,9 @@
 package namegenerator
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 var (
 	Prefixes = []string{
@@ -26,6 +29,7 @@ var (
 )
 
 func GenerateNew() string {
+	rand.Seed(time.Now().Unix())
 	Prefix := Prefixes[rand.Intn(len(Prefixes)-1)]
 	Suffix := Suffixes[rand.Intn(len(Suffixes)-1)]
 

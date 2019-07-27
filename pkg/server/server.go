@@ -28,6 +28,7 @@ type Gamemode interface {
 	Simulate()
 	PlayerDoAction(req *proto.DoActionRequest) error
 	NextEvent() *proto.GameEvent
+	Status() *proto.GameStatusResponse
 }
 
 type Server struct {
@@ -117,6 +118,7 @@ func (g *Server) StartGame(id string) {
 	go func() {
 		game.Setup()
 		game.Simulate()
+		log.Printf("Cleaning Up")
 		// Cleanup after game is done.
 		delete(g.Games, id)
 		delete(g.Listeners, id)
@@ -142,6 +144,15 @@ func (g *Server) DoAction(ctx context.Context, req *proto.DoActionRequest) (*pro
 	}
 
 	return &proto.DoActionResponse{}, nil
+}
+
+func (g *Server) GameStatus(ctx context.Context, req *proto.GameStatusRequest) (*proto.GameStatusResponse, error) {
+	game, ok := g.Games[req.GameID]
+	if !ok {
+		return &proto.GameStatusResponse{}, nil
+	}
+
+	return game.Status(), nil
 }
 
 func (g *Server) GlobalUpdate(req *proto.GlobalUpdateRequest, stream proto.Solarium_GlobalUpdateServer) error {

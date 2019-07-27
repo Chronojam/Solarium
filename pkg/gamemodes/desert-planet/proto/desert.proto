@@ -45,8 +45,28 @@ message DesertPlanetGatheredComponents {
     int32 Quantity = 1;
 }
 
-/// ## Fail and Win conditions.
-message DesertPlanetFailed {};
+/// ## FAILURE AND SUCCESS CONDITIONS
+message DesertPlanetFailed {
+    int32 Score = 1;
+};
 message DesertPlanetSucceeded {
     int32 Score = 1;
 };
+
+/// ## STATUS MESSAGES
+message DesertPlanetPlayerStatus {
+    string PlayerID = 1;
+    string PlayerName = 2;
+    int32 Thirst = 3;
+    int32 Hunger = 4;
+    bool Incapaciated = 5;
+    repeated string Status = 6;
+}
+message DesertPlanetStatus {
+    int32 Water = 1;
+    int32 Food  = 2;
+    int32 Fuel = 3;
+    int32 Components = 4;
+    int32 TargetComponents = 5;
+    repeated DesertPlanetPlayerStatus PlayerStatus = 6;
+}

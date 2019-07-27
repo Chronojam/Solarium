@@ -9,6 +9,7 @@ service Solarium {
     rpc GameUpdate(GameUpdateRequest) returns (stream GameUpdateResponse) {}
     rpc GlobalUpdate(GlobalUpdateRequest) returns (stream GlobalUpdateResponse) {}
     rpc DoAction(DoActionRequest) returns (DoActionResponse) {}
+    rpc GameStatus(GameStatusRequest) returns (GameStatusResponse) {}
 }
 
 message NewGameRequest {
@@ -27,7 +28,6 @@ message JoinGameRequest {
 message JoinGameResponse {
     string SecretKey = 1;
 }
-
 message GameUpdateRequest {
     string GameID = 1;
 };
@@ -73,4 +73,11 @@ message GlobalUpdateResponse {
 
 message GlobalEvent {
     string Notification = 1;
+}
+
+message GameStatusRequest {
+    string GameID = 1;
+}
+message GameStatusResponse {
+    DesertPlanetStatus DesertPlanet = 1;
 }
