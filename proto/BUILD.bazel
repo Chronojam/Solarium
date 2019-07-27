@@ -1,12 +1,13 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
-load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_library")
+load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_library", "DOTNET_CORE_FRAMEWORKS")
+
 
 proto_library(
     name = "proto_proto",
     srcs = ["solarium.proto"],
     visibility = ["//visibility:public"],
-    deps = ["//pkg/gamemodes/desert-planet/proto:proto_proto"]
+    deps = ["//pkg/gamemodes/desert-planet/proto:proto_proto"],
 )
 
 go_proto_library(
@@ -15,7 +16,7 @@ go_proto_library(
     importpath = "github.com/chronojam/solarium/proto",
     proto = ":proto_proto",
     visibility = ["//visibility:public"],
-    deps = ["//pkg/gamemodes/desert-planet/proto:go_default_library"]
+    deps = ["//pkg/gamemodes/desert-planet/proto:go_default_library"],
 )
 
 go_library(
@@ -37,19 +38,20 @@ csharp_grpc_compile(
     ],
 )
 
-core_library(
-    name = "csharp_grpc_lib",
+[core_library(
+    name = "csharp_grpc_lib_{}".format(framework),
     srcs = [
         ":csharp_grpc",
         "//pkg/gamemodes/desert-planet/proto:csharp_grpc",
     ],
+    dotnet_context_data = "@io_bazel_rules_dotnet//:core_context_data_{}".format(framework),
     deps = [
-        "@google.protobuf//:netstandard2.0_net",
-        "@io_bazel_rules_dotnet//dotnet/stdlib.core:system.io.dll",
-        "@grpc.core//:netstandard2.0_net",
-        "@grpc.core.api//:netstandard2.0_net",
-        "@system.interactive.async//:netstandard2.0_net",
-        "@io_bazel_rules_dotnet//dotnet/stdlib.core:netstandard.library.dll",
+        "@io_bazel_rules_dotnet//dotnet/stdlib.core/{}:system.io.dll".format(framework),
+        "@io_bazel_rules_dotnet//dotnet/stdlib.core/{}:netstandard.library.dll".format(framework),
+        "@google.protobuf//:netcoreapp2.1_core",
+        "@grpc.core//:netcoreapp2.1_core",
+        "@grpc.core.api//:netcoreapp2.1_core",
+        "@system.interactive.async//:netcoreapp2.1_core",
     ],
     visibility = ["//visibility:public"],
-)
+) for framework in DOTNET_CORE_FRAMEWORKS]

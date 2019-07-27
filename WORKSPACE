@@ -4,14 +4,6 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
 # Protobuf
-
-#http_archive(
-#    name = "com_google_protobuf",
-#    sha256 = "8eb5ca331ab8ca0da2baea7fc0607d86c46c80845deca57109a5d637ccb93bb4",
-#    strip_prefix = "protobuf-3.9.0",
-#    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.9.0.zip"],
-#)
-#load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 http_archive(
     name = "com_google_protobuf",
     sha256 = "5eb85831c3fcdacfe18f00f9b258cba0b81ca89ad63b80b835ca9f00693fdd5c",
@@ -59,6 +51,7 @@ load(
     "dotnet_register_toolchains",
     "dotnet_repositories",
     "nuget_package",
+    "DOTNET_CORE_FRAMEWORKS",
 )
 
 core_version = "v2.1.503"
@@ -68,27 +61,13 @@ dotnet_register_toolchains(
 )
 
 # For .NET Core:
-core_register_sdk(
-    core_version = core_version,
-    name = "core_sdk",
-)
-# For .NET Framework:
-#net_register_sdk(
-#    "net471",
-#    name = "net_sdk",
-#)
+[core_register_sdk(
+   framework
+) for framework in DOTNET_CORE_FRAMEWORKS]
 
-# For Mono:
-#mono_register_sdk()
 dotnet_repositories()
 load("@build_stack_rules_proto//csharp/nuget:packages.bzl", nuget_packages = "packages")
 nuget_packages()
-
-# Adding these manually down below.
-#load("@build_stack_rules_proto//csharp/nuget:nuget.bzl", "nuget_protobuf_packages")
-#nuget_protobuf_packages()
-#load("@build_stack_rules_proto//csharp/nuget:nuget.bzl", "nuget_grpc_packages")
-#nuget_grpc_packages()
 
 # Register Golang toolchains.
 

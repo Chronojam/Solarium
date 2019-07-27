@@ -18,6 +18,7 @@ message NewGameRequest {
 message NewGameResponse {
     string GameID = 1;
     string Description = 2;
+    string Name = 3;
 }
 message JoinGameRequest {
     string GameID = 1;

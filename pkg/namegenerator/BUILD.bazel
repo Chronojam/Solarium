@@ -2,7 +2,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "go_default_library",
-    srcs = ["idle.go"],
-    importpath = "github.com/chronojam/solarium/pkg/gamemodes/desert-planet/jobs/idle",
+    srcs = ["generator.go"],
+    importpath = "github.com/chronojam/solarium/pkg/namegenerator",
     visibility = ["//visibility:public"],
 )

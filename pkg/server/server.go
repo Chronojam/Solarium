@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/chronojam/solarium/pkg/gamemodes/desert-planet"
+	"github.com/chronojam/solarium/pkg/namegenerator"
 
 	"github.com/google/uuid"
 
@@ -80,13 +81,16 @@ func (g *Server) NewGame(ctx context.Context, req *proto.NewGameRequest) (*proto
 		return nil, err
 	}
 	g.Listeners[guid.String()] = map[string]chan *proto.GameEvent{}
-	g.Games[guid.String()] = gm(int(req.Difficulty))
+	newGame := gm(int(req.Difficulty))
+	g.Games[guid.String()] = newGame
 	g.DispatchToGlobal(&proto.GlobalEvent{
 		Notification: fmt.Sprintf("A new game has started of: %v, with id: %v", req.Gamemode, guid.String()),
 	})
 	g.StartGame(guid.String())
 	return &proto.NewGameResponse{
-		GameID: guid.String(),
+		GameID:      guid.String(),
+		Description: newGame.Description(),
+		Name:        namegenerator.GenerateNew(),
 	}, nil
 }
 
