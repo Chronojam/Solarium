@@ -4,81 +4,25 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/chronojam/solarium/pkg/game/interfaces"
-	components "github.com/chronojam/solarium/pkg/gamemodes/desert-planet/jobs/gather-components"
-	food "github.com/chronojam/solarium/pkg/gamemodes/desert-planet/jobs/gather-food"
-	water "github.com/chronojam/solarium/pkg/gamemodes/desert-planet/jobs/gather-water"
-	idle "github.com/chronojam/solarium/pkg/gamemodes/desert-planet/jobs/idle"
-	"github.com/chronojam/solarium/pkg/gamemodes/desert-planet/player"
-	"github.com/chronojam/solarium/pkg/gamemodes/desert-planet/player/conditions"
-	"github.com/chronojam/solarium/pkg/gamemodes/desert-planet/player/conditions/hunger"
-	"github.com/chronojam/solarium/pkg/gamemodes/desert-planet/player/conditions/thirst"
+	proto "github.com/chronojam/solarium/pkg/gamemodes/desert/proto"
+	solarium "github.com/chronojam/solarium/proto"
 	"github.com/google/uuid"
 )
 
 var (
-	Easy = interfaces.GameEvent{
-		Description: `
-Stranded on a desert planet, there are a small amount of supplies scattered within the immediate vicinity of your landing area
-You must find more water & food to survive; Getting off the planet wont be easy - you'll need to gather components from the planet.
-Fuel will allow you to travel further in a day.
-`}
-	Normal = interfaces.GameEvent{
-		Description: `
-Stranded on a desert planet, there are only a few supplies scattered within the immediate vicinity of your landing area
-You must find more water & food to survive; Getting off the planet wont be easy - you'll need to gather components from the planet.
-Fuel will allow you to travel further in a day.
-`}
-	Hard = interfaces.GameEvent{
-		Description: `
-Stranded on a desert planet, none of your gear managed to survive the crash; 
-You must find more water & food to survive; Getting off the planet wont be easy - you'll need to gather components from the planet.
-Fuel will allow you to travel further in a day.
-`}
-
-	PlayerActions = map[string]func(p *player.Player, d *DesertGamemode){
-		"me:GetWater": func(p *player.Player, d *DesertGamemode) {
-			p.Job = water.New(false)
-			d.SendEvent(fmt.Sprintf("%v is now gathering water!", p.Name))
-		},
-		"me:GetFood": func(p *player.Player, d *DesertGamemode) {
-			p.Job = food.New(false)
-			d.SendEvent(fmt.Sprintf("%v is now gathering food!", p.Name))
-		},
-		"me:GetComponents": func(p *player.Player, d *DesertGamemode) {
-			p.Job = components.New(false)
-			d.SendEvent(fmt.Sprintf("%v is now gathering components!", p.Name))
-		},
-		"me:GetWaterWithFuel": func(p *player.Player, d *DesertGamemode) {
-			if d.Fuel > 0 {
-				p.Job = water.New(true)
-				d.Fuel--
-				d.SendEvent(fmt.Sprintf("%v has taken a truck to gather some water!", p.Name))
-				return
-			}
-			p.Job = water.New(false)
-			d.SendEvent(fmt.Sprintf("%v is now gathering water!", p.Name))
-		},
-		"me:GetFoodWithFuel": func(p *player.Player, d *DesertGamemode) {
-			if d.Fuel > 0 {
-				p.Job = food.New(true)
-				d.Fuel--
-				d.SendEvent(fmt.Sprintf("%v has taken a truck to gather some food!", p.Name))
-				return
-			}
-			p.Job = food.New(false)
-			d.SendEvent(fmt.Sprintf("%v is now gathering food!", p.Name))
-		},
-		"me:GetComponentsWithFuel": func(p *player.Player, d *DesertGamemode) {
-			if d.Fuel > 0 {
-				p.Job = components.New(true)
-				d.Fuel--
-				d.SendEvent(fmt.Sprintf("%v has taken a truck to gather some components!", p.Name))
-				return
-			}
-			p.Job = components.New(true)
-			d.SendEvent(fmt.Sprintf("%v is now gathering components!", p.Name))
-		},
+	Descriptions = map[int]string{
+		// Easy
+		0: `Stranded on a desert planet, there are a small amount of supplies scattered within the immediate vicinity of your landing area
+		You must find more water & food to survive; Getting off the planet wont be easy - you'll need to gather components from the planet.
+		Fuel will allow you to travel further in a day.`,
+		// Normal
+		1: `Stranded on a desert planet, there are only a few supplies scattered within the immediate vicinity of your landing area
+		You must find more water & food to survive; Getting off the planet wont be easy - you'll need to gather components from the planet.
+		Fuel will allow you to travel further in a day.`,
+		// Hard
+		2: `Stranded on a desert planet, none of your gear managed to survive the crash; 
+		You must find more water & food to survive; Getting off the planet wont be easy - you'll need to gather components from the planet.
+		Fuel will allow you to travel further in a day.`,
 	}
 )
 
@@ -94,51 +38,209 @@ type DesertGamemode struct {
 	Fuel             int
 	Components       int
 	TargetComponents int
+	Score            int
 
 	// The players
-	Players     []*player.Player
-	Description string
+	Players []*solarium.Player
+	// Haters will say you should store these on the
+	// player object itself, but fight me?
+	PlayerStatus map[string]*PlayerStatus
 
 	// Event stream
-	EventStream chan interfaces.GameEvent
+	EventStream  chan *solarium.GameEvent
+	RoundActions map[string]interface{}
+}
+
+func (d *DesertGamemode) Description() string {
+	return Descriptions[d.Difficulty]
 }
 
 func New(difficulty int) *DesertGamemode {
 	return &DesertGamemode{
 		Difficulty:  difficulty,
-		EventStream: make(chan interfaces.GameEvent),
+		EventStream: make(chan *solarium.GameEvent),
+		Score:       100 + difficulty*100,
 	}
 }
 
-func (d *DesertGamemode) Join(name string) (interfaces.Player, error) {
+func (d *DesertGamemode) Join(name string) (*solarium.Player, error) {
 	pid, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
 	}
 
-	p := &player.Player{
+	p := &solarium.Player{
 		Name: name,
 		ID:   pid.String(),
-		Job:  &idle.Idle{},
 	}
 
 	d.Players = append(d.Players, p)
-	p.Conditions = append(p.Conditions, thirst.New())
-	p.Conditions = append(p.Conditions, hunger.New())
-
 	return p, nil
 }
 
-func (d *DesertGamemode) PlayerDoAction(pid, action string) error {
-	for _, player := range d.Players {
-		if player.Id() == pid {
-			if val, ok := PlayerActions[action]; ok {
-				val(player, d)
-			}
+func (d *DesertGamemode) FindPlayerByPid(pid string) (*solarium.Player, bool) {
+	for _, p := range d.Players {
+		if p.ID == pid {
+			return p, true
 		}
 	}
 
+	return nil, false
+}
+
+func (d *DesertGamemode) PlayerDoAction(req *solarium.DoActionRequest) error {
+	pid := req.PlayerID
+	if _, ok := d.FindPlayerByPid(pid); !ok {
+		// Invalid PID
+		return nil
+	}
+
+	if req.DesertPlanet == nil {
+		// Tried to do something, but didnt pass an action
+		// or the action wasnt part of the right namespace.
+		return nil
+	}
+	if req.DesertPlanet.GatherWater != nil {
+		d.RoundActions[pid] = req.DesertPlanet.GatherWater
+		return nil
+	}
+	if req.DesertPlanet.GatherFood != nil {
+		d.RoundActions[pid] = req.DesertPlanet.GatherFood
+		return nil
+	}
+	if req.DesertPlanet.GatherComponents != nil {
+		d.RoundActions[pid] = req.DesertPlanet.GatherComponents
+		return nil
+	}
+
+	// Should never get here, but here we are?
+	log.Printf("Reached impossible in desert-Planet PlayerDoAction()")
 	return nil
+}
+
+func (d *DesertGamemode) Simulate() {
+	// As long as we've got players in the game.
+	for {
+		// For now, dont do anything while we wait for players.
+		if len(d.Players) < 0 {
+			continue
+		}
+		// Wait for each player to take an action before continuing
+		if len(d.RoundActions) != len(d.Players) {
+			continue
+		}
+		// Resolve the round.
+		d.ResolveRound()
+
+		// Check for win & lose conditions
+		incappedPlayers := 0
+		for _, p := range d.PlayerStatus {
+			if p.Incapaciated {
+				incappedPlayers += 1
+			}
+		}
+		// Everyone is down.
+		if incappedPlayers == len(d.Players)+1 {
+			d.EventStream <- &solarium.GameEvent{
+				Name:            "Failed",
+				Desc:            fmt.Sprintf("All the players have died! Gameover!"),
+				AffectedPlayers: d.Players,
+				DesertPlanet: &proto.DesertPlanetEvent{
+					DesertPlanetFailed: &proto.DesertPlanetFailed{},
+				},
+			}
+			break
+		}
+
+		if d.TargetComponents == d.Components {
+			d.EventStream <- &solarium.GameEvent{
+				Name:            "Succeeded",
+				Desc:            fmt.Sprintf("The players managed to escape!"),
+				AffectedPlayers: d.Players,
+				DesertPlanet: &proto.DesertPlanetEvent{
+					DesertPlanetSucceeded: &proto.DesertPlanetSucceeded{},
+				},
+			}
+			break
+		}
+	}
+}
+
+func (d *DesertGamemode) ResolveRound() {
+	// See what state each player is in
+	for _, p := range d.Players {
+		status, _ := d.PlayerStatus[p.ID]
+		status.Hunger -= 1
+		status.Thirst -= 1
+
+		// You can only eat/drink if you are not incapacitated.
+		if !status.Incapaciated {
+			if status.Thirst <= 2 {
+				// Try to take a drink.
+				if d.Water >= 0 {
+					d.Water -= 1
+					status.Thirst += 2
+				}
+			}
+			if status.Hunger <= 2 {
+				// Try to get something to eat.
+				if d.Food >= 0 {
+					d.Food -= 1
+					status.Hunger += 2
+				}
+			}
+		}
+
+		status.Status = []string{}
+		switch {
+		case status.Thirst < 0:
+			status.Incapaciated = true
+			status.Status = append(status.Status, fmt.Sprintf("%v has collapsed due to thirst!", p.Name))
+			d.Score -= 5
+		case status.Thirst == 1:
+			status.Incapaciated = false
+			status.Status = append(status.Status, fmt.Sprintf("%v is extremely thirsty", p.Name))
+			d.Score -= 1
+		case status.Thirst >= 2:
+			status.Incapaciated = false
+			status.Status = append(status.Status, fmt.Sprintf("%v is perfectly hydrated", p.Name))
+		}
+		switch {
+		case status.Hunger < 0:
+			status.Incapaciated = true
+			status.Status = append(status.Status, fmt.Sprintf("%v has collapsed due to hunger!", p.Name))
+			d.Score -= 5
+		case status.Hunger == 1:
+			status.Incapaciated = false
+			status.Status = append(status.Status, fmt.Sprintf("%v is extremely hungry", p.Name))
+			d.Score -= 1
+		case status.Hunger >= 2:
+			status.Incapaciated = false
+			status.Status = append(status.Status, fmt.Sprintf("%v is well fed", p.Name))
+		}
+	}
+
+	// Allow all our players to do their actions now
+	for pid, action := range d.RoundActions {
+		player, _ := d.FindPlayerByPid(pid)
+		status, _ := d.PlayerStatus[pid]
+		if status.Incapaciated {
+			// You get to do nothing because you are incapped.
+			break
+		}
+		switch action.(type) {
+		case *proto.DesertPlanetGatherWater:
+			d.gatherWater(player)
+		case *proto.DesertPlanetGatherFood:
+			d.gatherFood(player)
+		case *proto.DesertPlanetGatherComponents:
+			d.gatherComponent(player)
+		default:
+			// Whatever we just got we dont reckonize.
+		}
+	}
+	// Empty the buffer
+	d.RoundActions = map[string]interface{}{}
 }
 
 func (d *DesertGamemode) Setup() {
@@ -149,129 +251,28 @@ func (d *DesertGamemode) Setup() {
 		d.Food = 2
 		d.Components = 0
 		d.TargetComponents = 3
-		d.SendEvent(Easy.Description)
 	case 2:
 		d.Fuel = 1
 		d.Water = 1
 		d.Food = 1
 		d.Components = 0
 		d.TargetComponents = 5
-		d.SendEvent(Normal.Description)
 	case 3:
 		d.Fuel = 0
 		d.Water = 0
 		d.Food = 0
 		d.Components = 0
 		d.TargetComponents = 10
-		d.SendEvent(Hard.Description)
 	default:
 		d.Fuel = 2
 		d.Water = 2
 		d.Food = 2
 		d.Components = 0
 		d.TargetComponents = 3
-		d.SendEvent(Easy.Description)
 	}
 }
 
-func (d *DesertGamemode) NextEvent() interfaces.GameEvent {
-	log.Printf("Trying to get next event")
+func (d *DesertGamemode) NextEvent() *solarium.GameEvent {
 	e := <-d.EventStream
-	log.Printf(e.Description)
-
-	//log.Printf("Fetched %v from estream", e.Description)
 	return e
-}
-
-// Do a single simulation 'tick'
-func (d *DesertGamemode) Simulate() {
-	playersWhoDied := []int{}
-	for i, p := range d.Players {
-		skipMe := false
-		// Update all our conditions
-		for _, c := range p.Conditions {
-			// eat food/drink water first.
-			switch v := c.(type) {
-			case *thirst.Thirst:
-				if d.Water == 0 {
-					d.SendEvent(p.Name + " tried to take a drink of water, but there was none!")
-					break
-				}
-				d.Water--
-				d.SendEvent(fmt.Sprintf("%v units of water remaining", d.Water))
-				v.SetValue(100)
-			case *hunger.Hunger:
-				if d.Food == 0 {
-					d.SendEvent(p.Name + " tried to grab a bite to eat, but there was none!")
-					break
-				}
-				d.Food--
-				v.SetValue(100)
-			}
-
-			c.Simulate()
-
-			// Decide who died.
-			if c.State() == conditions.Fatal {
-				playersWhoDied = append(playersWhoDied, i)
-				d.SendEvent("Player: " + p.Name + " " + c.FatalText())
-				skipMe = true
-				continue
-			}
-		}
-		if skipMe {
-			continue
-		}
-
-		// Everyone continues to do their jobs.
-		p.Job.Simulate()
-		switch v := p.Job.(type) {
-		case *water.Water:
-			if v.Done() {
-				d.Water += v.Amount()
-				d.SendEvent(fmt.Sprintf("%v has fetched %v units of water; there is now %v units of water", p.Name, v.Amount(), d.Water))
-				p.Job = water.New(false) //idle.New(false)
-			}
-		case *food.Food:
-			if v.Done() {
-				d.Food += v.Amount()
-				d.SendEvent(fmt.Sprintf("%v has fetched %v units of food", p.Name, v.Amount()))
-				p.Job = idle.New(false)
-			}
-		case *components.Components:
-			if v.Done() {
-				d.Components += v.Amount()
-				d.SendEvent(fmt.Sprintf("%v has fetched %v units of components", p.Name, v.Amount()))
-				p.Job = idle.New(false)
-			}
-		case *idle.Idle:
-			d.SendEvent(p.Name + " decides to laze around the camp for today")
-		}
-	}
-
-	// Kill off anyone who died, remove them from the game
-	for _, p := range playersWhoDied {
-		d.Players = append(d.Players[:p], d.Players[p+1:]...)
-	}
-
-	// Lose Condition
-	if len(d.Players) == 0 {
-		d.SendEvent("Everyone died")
-		return
-	}
-
-	// Win Condition
-	if d.Components == d.TargetComponents {
-		// You win!
-		d.SendEvent("You got all the components! Nice one!")
-		return
-	}
-
-	//d.SendEvent(fmt.Sprintf("GameState: \nWater: %v\nFood: %v\nFuel: %v\nComponents: %v\n", d.Water, d.Food, d.Fuel, d.Components))
-}
-
-func (d *DesertGamemode) SendEvent(des string) {
-	d.EventStream <- interfaces.GameEvent{
-		Description: des,
-	}
 }

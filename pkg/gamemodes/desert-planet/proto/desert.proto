@@ -1,0 +1,52 @@
+syntax = "proto3";
+option go_package="github.com/chronojam/solarium/pkg/gamemodes/desert/proto";
+
+
+
+//// ## ACTIONS
+// ActionInterface 
+
+message DesertPlanetAction {
+    DesertPlanetGatherWater GatherWater = 1;
+    DesertPlanetGatherFood  GatherFood = 2;
+    DesertPlanetGatherComponents GatherComponents = 3;
+}
+// Instruct the player to gather some water.
+message DesertPlanetGatherWater {}
+// Instruct the player to gather some food.
+message DesertPlanetGatherFood {}
+// Instruct the player to gather some components.
+message DesertPlanetGatherComponents {}
+
+
+/// ## NOTIFICATIONS 
+// NotificationInterface
+message DesertPlanetEvent {
+    DesertPlanetGatheredWater DesertPlanetGatheredWater = 1;
+    DesertPlanetGatheredFood  DesertPlanetGatheredFood = 2;
+    DesertPlanetGatheredComponents DesertPlanetGatheredComponents = 3;
+
+    DesertPlanetFailed DesertPlanetFailed = 4;
+    DesertPlanetSucceeded DesertPlanetSucceeded = 5;
+}
+// A player gathered some water
+message DesertPlanetGatheredWater {
+    // How much water did they gather?
+    int32 Quantity = 1;
+}
+// A player gathered some food
+message DesertPlanetGatheredFood {
+    // How much water did they gather?
+    int32 Quantity = 1;
+}
+// A player gathered some components
+message DesertPlanetGatheredComponents {
+    // How much water did they gather?
+    int32 Quantity = 1;
+}
+
+/// ## Fail and Win conditions.
+message DesertPlanetFailed {};
+message DesertPlanetSucceeded {
+    int32 Score = 1;
+};

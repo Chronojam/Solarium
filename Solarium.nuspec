@@ -2,12 +2,12 @@
 <package>
   <metadata>
     <id>Solarium</id>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <authors>Chronojam</authors>
     <owners>calliope@chronojam.co.uk</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Solarium GRPC bindings</description>
-    <releaseNotes>Wherein we build via bazel</releaseNotes>
+    <releaseNotes></releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags></tags>
     <dependencies>

@@ -6,15 +6,16 @@ proto_library(
     name = "proto_proto",
     srcs = ["solarium.proto"],
     visibility = ["//visibility:public"],
+    deps = ["//pkg/gamemodes/desert-planet/proto:proto_proto"]
 )
 
-# Golang
 go_proto_library(
     name = "proto_go_proto",
     compilers = ["@io_bazel_rules_go//proto:go_grpc"],
     importpath = "github.com/chronojam/solarium/proto",
     proto = ":proto_proto",
     visibility = ["//visibility:public"],
+    deps = ["//pkg/gamemodes/desert-planet/proto:go_default_library"]
 )
 
 go_library(
@@ -27,17 +28,21 @@ go_library(
 # C#
 load("@build_stack_rules_proto//csharp:csharp_proto_compile.bzl", "csharp_proto_compile")
 load("@build_stack_rules_proto//csharp:csharp_grpc_library.bzl", "csharp_grpc_library")
-
 load("@build_stack_rules_proto//csharp:csharp_grpc_compile.bzl", "csharp_grpc_compile")
 
 csharp_grpc_compile(
     name = "csharp_grpc",
-    deps = [":proto_proto"],
+    deps = [
+        ":proto_proto",
+    ],
 )
 
 core_library(
     name = "csharp_grpc_lib",
-    srcs = [":csharp_grpc"],
+    srcs = [
+        ":csharp_grpc",
+        "//pkg/gamemodes/desert-planet/proto:csharp_grpc",
+    ],
     deps = [
         "@google.protobuf//:netstandard2.0_net",
         "@io_bazel_rules_dotnet//dotnet/stdlib.core:system.io.dll",

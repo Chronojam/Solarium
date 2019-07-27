@@ -1,5 +1,6 @@
 syntax = "proto3";
 option go_package="github.com/chronojam/solarium/proto";
+import "pkg/gamemodes/desert-planet/proto/desert.proto";
 package solarium;
 
 service Solarium {
@@ -16,6 +17,7 @@ message NewGameRequest {
 }
 message NewGameResponse {
     string GameID = 1;
+    string Description = 2;
 }
 message JoinGameRequest {
     string GameID = 1;
@@ -28,19 +30,46 @@ message JoinGameResponse {
 message GameUpdateRequest {
     string GameID = 1;
 };
-message GameUpdateResponse {
-    string Notification = 1;
-};
 
-message GlobalUpdateRequest {};
-message GlobalUpdateResponse {
-    string Notification = 1;
+message Player {
+    string ID = 1;
+    string Name = 2;
+}
+
+message GameUpdateResponse {
+    repeated GameEvent Events = 1;
+};
+message GameEvent{
+    // The name of the event.
+    string Name = 1;
+    // The Description of the event.
+    string Desc = 2;
+
+    // A list of players who initiated this event
+    repeated Player InitatingPlayers = 3;
+    // A list of players who are affected by this event
+    repeated Player AffectedPlayers = 4;
+
+    // Desert Planet Scenario
+    DesertPlanetEvent DesertPlanet = 5;
+
 };
 
 message DoActionRequest {
-    string SecretKey = 1;
+    string PlayerID = 1;
     string GameID = 2;
-    string Action = 3;
+
+    // Desert Planet Scenario
+    DesertPlanetAction DesertPlanet = 3;
 };
 
 message DoActionResponse {};
+
+message GlobalUpdateRequest {};
+message GlobalUpdateResponse {
+    repeated GlobalEvent Events = 1;
+};
+
+message GlobalEvent {
+    string Notification = 1;
+}

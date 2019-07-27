@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
-	"github.com/chronojam/solarium/pkg/game/interfaces"
 	"github.com/chronojam/solarium/pkg/gamemodes/desert-planet"
 
 	"github.com/google/uuid"
@@ -24,10 +22,11 @@ var (
 
 type Gamemode interface {
 	Setup()
-	NextEvent() interfaces.GameEvent
+	Description() string
+	Join(name string) (*proto.Player, error)
 	Simulate()
-	Join(name string) (interfaces.Player, error)
-	PlayerDoAction(pid, action string) error
+	PlayerDoAction(req *proto.DoActionRequest) error
+	NextEvent() *proto.GameEvent
 }
 
 type Server struct {
@@ -38,46 +37,36 @@ type Server struct {
 	History []string
 
 	// GameID: []chan string
-	Listeners map[string]map[string]chan string
+	Listeners       map[string]map[string]chan *proto.GameEvent
+	GlobalListeners map[string]chan *proto.GlobalEvent
 }
 
 func New() *Server {
 	s := &Server{
-		Games: map[string]Gamemode{},
-		Listeners: map[string]map[string]chan string{
-			"Global": map[string]chan string{},
-		},
+		Games:           map[string]Gamemode{},
+		Listeners:       map[string]map[string]chan *proto.GameEvent{},
+		GlobalListeners: map[string]chan *proto.GlobalEvent{},
 	}
-	//go s.NotificationSpreader()
 	return s
 }
 
-/*func (g *Server) NotificationSpreader() {
-	// Listen for notifications
-	for {
-		select {
-		case notification := <-g.System.NotificationChan:
-			log.Printf("Got Notification: %v", notification)
-			// Put one copy onto the history list
-			g.History = append(g.History, notification)
-
-			// Send one to each listening channel.
-			for _, c := range g.Listeners {
-				c <- notification
-			}
-		}
-	}
-}*/
-
-func (g *Server) DispatchToGameID(idi, message string) {
+func (g *Server) DispatchToGameID(idi string, event *proto.GameEvent) {
 	for id, listeners := range g.Listeners {
 		if id == idi {
 			for _, lis := range listeners {
 				go func() {
-					lis <- message
+					lis <- event
 				}()
 			}
 		}
+	}
+}
+
+func (g *Server) DispatchToGlobal(e *proto.GlobalEvent) {
+	for _, lis := range g.GlobalListeners {
+		go func() {
+			lis <- e
+		}()
 	}
 }
 
@@ -90,9 +79,11 @@ func (g *Server) NewGame(ctx context.Context, req *proto.NewGameRequest) (*proto
 	if err != nil {
 		return nil, err
 	}
-	g.Listeners[guid.String()] = map[string]chan string{}
+	g.Listeners[guid.String()] = map[string]chan *proto.GameEvent{}
 	g.Games[guid.String()] = gm(int(req.Difficulty))
-	g.DispatchToGameID("Global", fmt.Sprintf("A new game has started of: %v, with id: %v", req.Gamemode, guid.String()))
+	g.DispatchToGlobal(&proto.GlobalEvent{
+		Notification: fmt.Sprintf("A new game has started of: %v, with id: %v", req.Gamemode, guid.String()),
+	})
 	g.StartGame(guid.String())
 	return &proto.NewGameResponse{
 		GameID: guid.String(),
@@ -110,7 +101,7 @@ func (g *Server) JoinGame(ctx context.Context, req *proto.JoinGameRequest) (*pro
 		return nil, err
 	}
 	return &proto.JoinGameResponse{
-		SecretKey: p.Id(),
+		SecretKey: p.ID,
 	}, nil
 }
 
@@ -120,19 +111,16 @@ func (g *Server) StartGame(id string) {
 		return
 	}
 	go func() {
-		log.Printf("Doing Setup()")
 		game.Setup()
-		for {
-			time.Sleep(time.Second * 5)
-			game.Simulate()
-		}
+		game.Simulate()
+		// Cleanup after game is done.
+		delete(g.Games, id)
+		delete(g.Listeners, id)
 	}()
 	go func() {
 		for {
-			log.Printf("Waiting for event..")
 			e := game.NextEvent()
-			log.Printf(e.Description)
-			g.DispatchToGameID(id, e.Description)
+			g.DispatchToGameID(id, e)
 		}
 	}()
 }
@@ -142,27 +130,32 @@ func (g *Server) DoAction(ctx context.Context, req *proto.DoActionRequest) (*pro
 	if !ok {
 		return &proto.DoActionResponse{}, nil
 	}
-	err := game.PlayerDoAction(req.SecretKey, req.Action)
+	// Try and figure out which option we have sent
+	// we should only ever send one, so just take the first we find.
+	err := game.PlayerDoAction(req)
 	if err != nil {
 		return nil, err
 	}
+
 	return &proto.DoActionResponse{}, nil
 }
 
 func (g *Server) GlobalUpdate(req *proto.GlobalUpdateRequest, stream proto.Solarium_GlobalUpdateServer) error {
-	me := make(chan string)
+	me := make(chan *proto.GlobalEvent)
 	cid, err := uuid.NewRandom()
 	if err != nil {
 		return err
 	}
 	cuuid := cid.String()
-	g.Listeners["Global"][cuuid] = me
+	g.GlobalListeners[cuuid] = me
 	for {
 		select {
 		case notification := <-me:
-			if err := stream.Send(&proto.GlobalUpdateResponse{Notification: notification}); err != nil {
+			if err := stream.Send(&proto.GlobalUpdateResponse{Events: []*proto.GlobalEvent{
+				notification,
+			}}); err != nil {
 				log.Printf("%v", err)
-				delete(g.Listeners["Global"], cuuid)
+				delete(g.GlobalListeners, cuuid)
 				return nil
 			}
 		}
@@ -174,20 +167,20 @@ func (g *Server) GlobalUpdate(req *proto.GlobalUpdateRequest, stream proto.Solar
 func (g *Server) GameUpdate(req *proto.GameUpdateRequest, stream proto.Solarium_GameUpdateServer) error {
 	// Keep this guy open. Continually read from the notification channel and send it off
 	// to whoever is connected.
-	me := make(chan string)
+	me := make(chan *proto.GameEvent)
 	cid, err := uuid.NewRandom()
 	if err != nil {
 		return err
 	}
 	cuuid := cid.String()
 	g.Listeners[req.GameID][cuuid] = me
-	log.Printf("Stream %v", cuuid)
 
 	// Continully send updates to the client as long as this connection is open.
+	// For now, dont bulk send
 	for {
 		select {
-		case notification := <-me:
-			if err := stream.Send(&proto.GameUpdateResponse{Notification: notification}); err != nil {
+		case event := <-me:
+			if err := stream.Send(&proto.GameUpdateResponse{Events: []*proto.GameEvent{event}}); err != nil {
 				log.Printf("%v", err)
 				delete(g.Listeners[req.GameID], cuuid)
 				return nil
