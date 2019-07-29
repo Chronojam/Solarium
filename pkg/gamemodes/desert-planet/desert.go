@@ -116,12 +116,14 @@ func (d *DesertGamemode) PlayerDoAction(req *solarium.DoActionRequest) error {
 	pid := req.PlayerID
 	if _, ok := d.FindPlayerByPid(pid); !ok {
 		// Invalid PID
+		log.Printf("Player not in game, but attempted to do an action")
 		return nil
 	}
 
 	if req.DesertPlanet == nil {
 		// Tried to do something, but didnt pass an action
 		// or the action wasnt part of the right namespace.
+		log.Printf("DoActionRequest.DesertPlanet was nil")
 		return nil
 	}
 	ActionLock.Lock()
@@ -154,7 +156,7 @@ func (d *DesertGamemode) Simulate() {
 		}
 		// Wait for each player to take an action before continuing
 		if len(d.RoundActions) != len(d.Players) {
-			log.Printf("Waiting for all players to declare an action..")
+			log.Printf("There are %v players, we are still waiting for %v actions", len(d.Players), len(d.RoundActions))
 			continue
 		}
 		// Resolve the round.
@@ -173,6 +175,7 @@ func (d *DesertGamemode) Simulate() {
 				Name:            "Failed",
 				Desc:            fmt.Sprintf("All the players have died! Gameover!"),
 				AffectedPlayers: d.Players,
+				IsGameOver:      true,
 				DesertPlanet: &proto.DesertPlanetEvent{
 					DesertPlanetFailed: &proto.DesertPlanetFailed{
 						Score: int32(d.Score),
@@ -187,6 +190,7 @@ func (d *DesertGamemode) Simulate() {
 				Name:            "Succeeded",
 				Desc:            fmt.Sprintf("The players managed to escape!"),
 				AffectedPlayers: d.Players,
+				IsGameOver:      true,
 				DesertPlanet: &proto.DesertPlanetEvent{
 					DesertPlanetSucceeded: &proto.DesertPlanetSucceeded{
 						Score: int32(d.Score),

@@ -6,6 +6,7 @@ import (
 	"log"
 
 	desert "github.com/chronojam/solarium/pkg/gamemodes/desert-planet"
+	"github.com/chronojam/solarium/pkg/gamemodes/thewolfgame"
 	"github.com/chronojam/solarium/pkg/namegenerator"
 
 	"github.com/google/uuid"
@@ -17,6 +18,9 @@ var (
 	AvaliableGameModes = map[string]func(diff proto.NewGameRequest_DifficultyLevel) Gamemode{
 		proto.NewGameRequest_DESERTPLANET.String(): func(diff proto.NewGameRequest_DifficultyLevel) Gamemode {
 			return desert.New(diff)
+		},
+		proto.NewGameRequest_THEWOLFGAME.String(): func(diff proto.NewGameRequest_DifficultyLevel) Gamemode {
+			return thewolfgame.New()
 		},
 	}
 )
@@ -182,6 +186,18 @@ func (g *Server) GlobalUpdate(req *proto.GlobalUpdateRequest, stream proto.Solar
 func (g *Server) GameUpdate(req *proto.GameUpdateRequest, stream proto.Solarium_GameUpdateServer) error {
 	// Keep this guy open. Continually read from the notification channel and send it off
 	// to whoever is connected.
+	if _, ok := g.Games[req.GameID]; !ok {
+		// Game doesnt exist, or never existed.
+		if err := stream.Send(&proto.GameUpdateResponse{Events: []*proto.GameEvent{
+			&proto.GameEvent{
+				Desc:       "This game is already over!",
+				IsGameOver: true,
+			},
+		}}); err != nil {
+			return err
+		}
+		return nil
+	}
 	me := make(chan *proto.GameEvent)
 	cid, err := uuid.NewRandom()
 	if err != nil {

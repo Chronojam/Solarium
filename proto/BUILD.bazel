@@ -8,11 +8,12 @@ genrule(
     srcs = [
         "solarium.proto",
         "//pkg/gamemodes/desert-planet/proto:desert.proto",
+        "//pkg/gamemodes/thewolfgame/proto:wolf.proto",
     ],
     outs = ["docs.md"],
     cmd = """
         $(location @com_google_protobuf//:protoc) \
-            --plugin=$(location @com_github_pseudomuto_protoc_gen_doc//cmd/protoc-gen-doc:protoc-gen-doc) \
+            --plugin=protoc-gen-doc=$(location @com_github_pseudomuto_protoc_gen_doc//cmd/protoc-gen-doc:protoc-gen-doc) \
             --doc_out=$(GENDIR)/proto \
             --doc_opt=markdown,docs.md \
             $(SRCS)
@@ -20,17 +21,19 @@ genrule(
     tools = [
         "@com_google_protobuf//:protoc",
         "@com_github_pseudomuto_protoc_gen_doc//cmd/protoc-gen-doc:protoc-gen-doc",
-    ]
+    ],
 )
 
 ## End Docs
-
 
 proto_library(
     name = "proto_proto",
     srcs = ["solarium.proto"],
     visibility = ["//visibility:public"],
-    deps = ["//pkg/gamemodes/desert-planet/proto:proto_proto"],
+    deps = [
+        "//pkg/gamemodes/desert-planet/proto:proto_proto",
+        "//pkg/gamemodes/thewolfgame/proto:proto_proto",
+    ],
 )
 
 go_proto_library(
@@ -39,7 +42,10 @@ go_proto_library(
     importpath = "github.com/chronojam/solarium/proto",
     proto = ":proto_proto",
     visibility = ["//visibility:public"],
-    deps = ["//pkg/gamemodes/desert-planet/proto:go_default_library"],
+    deps = [
+        "//pkg/gamemodes/desert-planet/proto:go_default_library",
+        "//pkg/gamemodes/thewolfgame/proto:go_default_library",
+    ],
 )
 
 go_library(

@@ -1,6 +1,7 @@
 syntax = "proto3";
 option go_package="github.com/chronojam/solarium/proto";
 import "pkg/gamemodes/desert-planet/proto/desert.proto";
+import "pkg/gamemodes/thewolfgame/proto/wolf.proto";
 package solarium;
 
 // The primary GRPC interface
@@ -31,6 +32,10 @@ message NewGameRequest {
         // A survival game, where the players must work
         // together to gather supplies and escape.
         DESERTPLANET = 0;
+
+        // A pvp game, where the objective is for the villagers
+        // to route out the werewolves before they manage to kill them all!
+        THEWOLFGAME = 1;
     }
     // A List of valid difficulties.
     enum DifficultyLevel {
@@ -107,9 +112,12 @@ message GameEvent{
     // A list of players who are affected by this event
     repeated Player AffectedPlayers = 4;
 
-    // DesertPlanet specific events.
-    DesertPlanetEvent DesertPlanet = 5;
+    // If you recieve this, then the game is over.
+    bool IsGameOver = 5;
 
+    // DesertPlanet specific events.
+    DesertPlanetEvent DesertPlanet = 6;
+    TheWolfGameEvent TheWolfGame = 7;
 };
 
 message DoActionRequest {
@@ -125,6 +133,7 @@ message DoActionRequest {
     // Populate me in order to perform actions
     // in this scenario
     DesertPlanetAction DesertPlanet = 3;
+    TheWolfGameAction TheWolfGame = 4;
 };
 
 message DoActionResponse {};
@@ -146,4 +155,5 @@ message GameStatusRequest {
 message GameStatusResponse {
     // DesertPlanet specific statuses
     DesertPlanetStatus DesertPlanet = 1;
+    TheWolfGameStatus TheWolfGame = 2;
 }

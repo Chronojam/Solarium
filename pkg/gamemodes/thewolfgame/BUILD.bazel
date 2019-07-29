@@ -2,13 +2,14 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "go_default_library",
-    srcs = ["server.go"],
-    importpath = "github.com/chronojam/solarium/pkg/server",
+    srcs = [
+        "player.go",
+        "wolf.go",
+    ],
+    importpath = "github.com/chronojam/solarium/pkg/gamemodes/thewolfgame",
     visibility = ["//visibility:public"],
     deps = [
-        "//pkg/gamemodes/desert-planet:go_default_library",
-        "//pkg/gamemodes/thewolfgame:go_default_library",
-        "//pkg/namegenerator:go_default_library",
+        "//pkg/gamemodes/thewolfgame/proto:go_default_library",
         "//proto:go_default_library",
         "@com_github_google_uuid//:go_default_library",
     ],

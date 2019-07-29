@@ -45,6 +45,20 @@
   
   
 
+- [pkg/gamemodes/thewolfgame/proto/wolf.proto](#pkg/gamemodes/thewolfgame/proto/wolf.proto)
+    - [TheWolfGameAction](#.TheWolfGameAction)
+    - [TheWolfGameAction.VillagerVictory](#.TheWolfGameAction.VillagerVictory)
+    - [TheWolfGameAction.VoteMurder](#.TheWolfGameAction.VoteMurder)
+    - [TheWolfGameAction.VoteStart](#.TheWolfGameAction.VoteStart)
+    - [TheWolfGameAction.WerewolfVictory](#.TheWolfGameAction.WerewolfVictory)
+    - [TheWolfGameEvent](#.TheWolfGameEvent)
+    - [TheWolfGameStatus](#.TheWolfGameStatus)
+    - [TheWolfGameStatusPlayer](#.TheWolfGameStatusPlayer)
+  
+  
+  
+  
+
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -67,6 +81,7 @@
 | PlayerID | [string](#string) |  | What playerID is performing the action? this is the same as the SecretKey from a JoinGameResponse |
 | GameID | [string](#string) |  | What gameId is this player in? |
 | DesertPlanet | [DesertPlanetAction](#DesertPlanetAction) |  | DesertPlanet Specific actions, Populate me in order to perform actions in this scenario |
+| TheWolfGame | [TheWolfGameAction](#TheWolfGameAction) |  |  |
 
 
 
@@ -95,7 +110,9 @@
 | Desc | [string](#string) |  | The Description of the event. |
 | InitatingPlayers | [Player](#solarium.Player) | repeated | A list of players who initiated this event |
 | AffectedPlayers | [Player](#solarium.Player) | repeated | A list of players who are affected by this event |
+| IsGameOver | [bool](#bool) |  | If you recieve this, then the game is over. |
 | DesertPlanet | [DesertPlanetEvent](#DesertPlanetEvent) |  | DesertPlanet specific events. |
+| TheWolfGame | [TheWolfGameEvent](#TheWolfGameEvent) |  |  |
 
 
 
@@ -126,6 +143,7 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | DesertPlanet | [DesertPlanetStatus](#DesertPlanetStatus) |  | DesertPlanet specific statuses |
+| TheWolfGame | [TheWolfGameStatus](#TheWolfGameStatus) |  |  |
 
 
 
@@ -306,6 +324,7 @@ A List of valid gamemodes.
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | DESERTPLANET | 0 | A survival game, where the players must work together to gather supplies and escape. |
+| THEWOLFGAME | 1 | A pvp game, where the objective is for the villagers to route out the werewolves before they manage to kill them all! |
 
 
  
@@ -523,6 +542,128 @@ won the scenario
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | Score | [int32](#int32) |  |  |
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+<a name="pkg/gamemodes/thewolfgame/proto/wolf.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## pkg/gamemodes/thewolfgame/proto/wolf.proto
+
+
+
+<a name=".TheWolfGameAction"></a>
+
+### TheWolfGameAction
+Wraps all the-wolf-game actions
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| PlayerID | [string](#string) |  | The ID of the player who&#39;s acting |
+| Vote | [TheWolfGameAction.VoteMurder](#TheWolfGameAction.VoteMurder) |  | What they have voted to do |
+| StartVote | [TheWolfGameAction.VoteStart](#TheWolfGameAction.VoteStart) |  | Special vote in order to start the game |
+| VillageVictory | [TheWolfGameAction.VillagerVictory](#TheWolfGameAction.VillagerVictory) |  | Populated in the event of the village victory |
+| WolfVictory | [TheWolfGameAction.WerewolfVictory](#TheWolfGameAction.WerewolfVictory) |  | Populated in the event of a wolf victory |
+
+
+
+
+
+
+<a name=".TheWolfGameAction.VillagerVictory"></a>
+
+### TheWolfGameAction.VillagerVictory
+
+
+
+
+
+
+
+<a name=".TheWolfGameAction.VoteMurder"></a>
+
+### TheWolfGameAction.VoteMurder
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| PlayerId | [string](#string) |  | The player to lynch/murder |
+
+
+
+
+
+
+<a name=".TheWolfGameAction.VoteStart"></a>
+
+### TheWolfGameAction.VoteStart
+
+
+
+
+
+
+
+<a name=".TheWolfGameAction.WerewolfVictory"></a>
+
+### TheWolfGameAction.WerewolfVictory
+
+
+
+
+
+
+
+<a name=".TheWolfGameEvent"></a>
+
+### TheWolfGameEvent
+
+
+
+
+
+
+
+<a name=".TheWolfGameStatus"></a>
+
+### TheWolfGameStatus
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Players | [TheWolfGameStatusPlayer](#TheWolfGameStatusPlayer) | repeated |  |
+| IsNight | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name=".TheWolfGameStatusPlayer"></a>
+
+### TheWolfGameStatusPlayer
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Name | [string](#string) |  |  |
+| IsAlive | [bool](#bool) |  |  |
 
 
 

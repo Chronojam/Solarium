@@ -1,0 +1,40 @@
+syntax = "proto3";
+option go_package="github.com/chronojam/solarium/pkg/gamemodes/thewolfgame/proto";
+
+
+/*
+ * Wraps all the-wolf-game actions
+*/
+message TheWolfGameAction {
+    message VoteMurder {
+        // The player to lynch/murder
+        string PlayerId = 1;
+    };
+    message VoteStart {};
+    message VillagerVictory {};
+    message WerewolfVictory {};
+
+    // The ID of the player who's acting
+    string PlayerID = 1;
+    // What they have voted to do
+    VoteMurder Vote = 2;
+    // Special vote in order to start the game
+    VoteStart  StartVote = 3;
+    // Populated in the event of the village victory
+    VillagerVictory VillageVictory = 4;
+    // Populated in the event of a wolf victory
+    WerewolfVictory WolfVictory = 5;
+}
+
+message TheWolfGameEvent {
+
+}
+
+message TheWolfGameStatusPlayer {
+    string Name = 1;
+    bool IsAlive =2;
+}
+message TheWolfGameStatus {
+    repeated TheWolfGameStatusPlayer Players = 1;
+    bool IsNight = 3;
+}
