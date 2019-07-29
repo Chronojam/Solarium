@@ -277,19 +277,19 @@ func (d *DesertGamemode) ResolveRound() {
 
 func (d *DesertGamemode) Setup() {
 	switch d.Difficulty {
-	case 1:
+	case solarium.NewGameRequest_EASY:
 		d.GameStatus.Fuel = 2
 		d.GameStatus.Water = 2
 		d.GameStatus.Food = 2
 		d.GameStatus.Components = 0
 		d.GameStatus.TargetComponents = 3
-	case 2:
+	case solarium.NewGameRequest_NORMAL:
 		d.GameStatus.Fuel = 1
 		d.GameStatus.Water = 1
 		d.GameStatus.Food = 1
 		d.GameStatus.Components = 0
 		d.GameStatus.TargetComponents = 5
-	case 3:
+	case solarium.NewGameRequest_HARD:
 		d.GameStatus.Fuel = 0
 		d.GameStatus.Water = 0
 		d.GameStatus.Food = 0
