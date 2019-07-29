@@ -1,4 +1,8 @@
 Solarium
+
+
+![solarium](https://raw.githubusercontent.com/chronojam/solarium/master/doc/solarium.png)
+
 ==
 
 Building Nuget Package
