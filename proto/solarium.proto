@@ -3,43 +3,99 @@ option go_package="github.com/chronojam/solarium/proto";
 import "pkg/gamemodes/desert-planet/proto/desert.proto";
 package solarium;
 
+// The primary GRPC interface
 service Solarium {
+    // Constructs a new game with the given parameters.
     rpc NewGame(NewGameRequest) returns (NewGameResponse) {}
+
+    // Join an existing game
     rpc JoinGame(JoinGameRequest) returns (JoinGameResponse) {}
+
+    // Subscribe to events from a given game.
     rpc GameUpdate(GameUpdateRequest) returns (stream GameUpdateResponse) {}
+
+    // Subscribe to all global events from the server, including
+    // annoucements, new game notifications etc.
     rpc GlobalUpdate(GlobalUpdateRequest) returns (stream GlobalUpdateResponse) {}
+
+    // Allows a player to perform an action in a game
     rpc DoAction(DoActionRequest) returns (DoActionResponse) {}
+
+    // Single call to request the current state of the game.
     rpc GameStatus(GameStatusRequest) returns (GameStatusResponse) {}
 }
 
 message NewGameRequest {
-    string Gamemode = 1;
-    int64 Difficulty = 2;
+    // A List of valid gamemodes.
+    enum GameMode {
+        // A survival game, where the players must work
+        // together to gather supplies and escape.
+        DESERTPLANET = 0;
+    }
+    // A List of valid difficulties.
+    enum DifficultyLevel {
+        // A nice lesuirely game, plenty of room for mistakes
+        EASY = 0;
+        // A bit more of a challenge, mistakes have consequences
+        NORMAL = 1;
+        // You will need to work together to survive
+        HARD = 2;
+        // You will not survive, but you can try to last as long as possible
+        INSANE = 3;
+    }
+    // Which gamemode you would like to request.
+    GameMode Gamemode = 1;
+    // How difficult this game should be
+    DifficultyLevel Difficulty = 2;
 }
+
 message NewGameResponse {
+    // The Id with which to pass back for all queries
+    // relating to this game.
     string GameID = 1;
+
+    // A short description of the game
     string Description = 2;
+
+    // A name for the game, this isnt stored server side so 
+    // you can choose to use it in your client or make your own!
     string Name = 3;
 }
+
 message JoinGameRequest {
+    // The Id of the game you wish to join
     string GameID = 1;
+
+    // The name of your player/character
     string Name = 2;
 }
+
 message JoinGameResponse {
+    // A special secret key used for playeractions,
+    // this should be kept hidden from other players.
     string SecretKey = 1;
 }
+
 message GameUpdateRequest {
+    // the Id of the game you wish to subscribe to events from
     string GameID = 1;
 };
 
 message Player {
+    // The ID Of the player, in general this is also the 
+    // secret key from a JoinGameResponse, so it should be kept
+    // a secret from other clients.
     string ID = 1;
+
+    // The Name of a player.
     string Name = 2;
 }
 
 message GameUpdateResponse {
+    // A bulk list of recent events from the game.
     repeated GameEvent Events = 1;
 };
+
 message GameEvent{
     // The name of the event.
     string Name = 1;
@@ -51,16 +107,23 @@ message GameEvent{
     // A list of players who are affected by this event
     repeated Player AffectedPlayers = 4;
 
-    // Desert Planet Scenario
+    // DesertPlanet specific events.
     DesertPlanetEvent DesertPlanet = 5;
 
 };
 
 message DoActionRequest {
+    // What playerID is performing the action?
+    // this is the same as the SecretKey from a
+    // JoinGameResponse
     string PlayerID = 1;
+
+    // What gameId is this player in?
     string GameID = 2;
 
-    // Desert Planet Scenario
+    // DesertPlanet Specific actions,
+    // Populate me in order to perform actions
+    // in this scenario
     DesertPlanetAction DesertPlanet = 3;
 };
 
@@ -68,6 +131,7 @@ message DoActionResponse {};
 
 message GlobalUpdateRequest {};
 message GlobalUpdateResponse {
+    // A list of Global events
     repeated GlobalEvent Events = 1;
 };
 
@@ -76,8 +140,10 @@ message GlobalEvent {
 }
 
 message GameStatusRequest {
+    // The Id of the game you wish to get the status from
     string GameID = 1;
 }
 message GameStatusResponse {
+    // DesertPlanet specific statuses
     DesertPlanetStatus DesertPlanet = 1;
 }

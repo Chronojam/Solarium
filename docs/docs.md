@@ -20,6 +20,8 @@
     - [NewGameResponse](#solarium.NewGameResponse)
     - [Player](#solarium.Player)
   
+    - [NewGameRequest.DifficultyLevel](#solarium.NewGameRequest.DifficultyLevel)
+    - [NewGameRequest.GameMode](#solarium.NewGameRequest.GameMode)
   
   
     - [Solarium](#solarium.Solarium)
@@ -62,9 +64,9 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| PlayerID | [string](#string) |  |  |
-| GameID | [string](#string) |  |  |
-| DesertPlanet | [DesertPlanetAction](#DesertPlanetAction) |  | Desert Planet Scenario |
+| PlayerID | [string](#string) |  | What playerID is performing the action? this is the same as the SecretKey from a JoinGameResponse |
+| GameID | [string](#string) |  | What gameId is this player in? |
+| DesertPlanet | [DesertPlanetAction](#DesertPlanetAction) |  | DesertPlanet Specific actions, Populate me in order to perform actions in this scenario |
 
 
 
@@ -93,7 +95,7 @@
 | Desc | [string](#string) |  | The Description of the event. |
 | InitatingPlayers | [Player](#solarium.Player) | repeated | A list of players who initiated this event |
 | AffectedPlayers | [Player](#solarium.Player) | repeated | A list of players who are affected by this event |
-| DesertPlanet | [DesertPlanetEvent](#DesertPlanetEvent) |  | Desert Planet Scenario |
+| DesertPlanet | [DesertPlanetEvent](#DesertPlanetEvent) |  | DesertPlanet specific events. |
 
 
 
@@ -108,7 +110,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| GameID | [string](#string) |  |  |
+| GameID | [string](#string) |  | The Id of the game you wish to get the status from |
 
 
 
@@ -123,7 +125,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| DesertPlanet | [DesertPlanetStatus](#DesertPlanetStatus) |  |  |
+| DesertPlanet | [DesertPlanetStatus](#DesertPlanetStatus) |  | DesertPlanet specific statuses |
 
 
 
@@ -138,7 +140,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| GameID | [string](#string) |  |  |
+| GameID | [string](#string) |  | the Id of the game you wish to subscribe to events from |
 
 
 
@@ -153,7 +155,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| Events | [GameEvent](#solarium.GameEvent) | repeated |  |
+| Events | [GameEvent](#solarium.GameEvent) | repeated | A bulk list of recent events from the game. |
 
 
 
@@ -193,7 +195,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| Events | [GlobalEvent](#solarium.GlobalEvent) | repeated |  |
+| Events | [GlobalEvent](#solarium.GlobalEvent) | repeated | A list of Global events |
 
 
 
@@ -208,8 +210,8 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| GameID | [string](#string) |  |  |
-| Name | [string](#string) |  |  |
+| GameID | [string](#string) |  | The Id of the game you wish to join |
+| Name | [string](#string) |  | The name of your player/character |
 
 
 
@@ -224,7 +226,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| SecretKey | [string](#string) |  |  |
+| SecretKey | [string](#string) |  | A special secret key used for playeractions, this should be kept hidden from other players. |
 
 
 
@@ -239,8 +241,8 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| Gamemode | [string](#string) |  |  |
-| Difficulty | [int64](#int64) |  |  |
+| Gamemode | [NewGameRequest.GameMode](#solarium.NewGameRequest.GameMode) |  | Which gamemode you would like to request. |
+| Difficulty | [NewGameRequest.DifficultyLevel](#solarium.NewGameRequest.DifficultyLevel) |  | How difficult this game should be |
 
 
 
@@ -255,9 +257,9 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| GameID | [string](#string) |  |  |
-| Description | [string](#string) |  |  |
-| Name | [string](#string) |  |  |
+| GameID | [string](#string) |  | The Id with which to pass back for all queries relating to this game. |
+| Description | [string](#string) |  | A short description of the game |
+| Name | [string](#string) |  | A name for the game, this isnt stored server side so you can choose to use it in your client or make your own! |
 
 
 
@@ -272,14 +274,39 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ID | [string](#string) |  |  |
-| Name | [string](#string) |  |  |
+| ID | [string](#string) |  | The ID Of the player, in general this is also the secret key from a JoinGameResponse, so it should be kept a secret from other clients. |
+| Name | [string](#string) |  | The Name of a player. |
 
 
 
 
 
  
+
+
+<a name="solarium.NewGameRequest.DifficultyLevel"></a>
+
+### NewGameRequest.DifficultyLevel
+A List of valid difficulties.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| EASY | 0 | A nice lesuirely game, plenty of room for mistakes |
+| NORMAL | 1 | A bit more of a challenge, mistakes have consequences |
+| HARD | 2 | You will need to work together to survive |
+| INSANE | 3 | You will not survive, but you can try to last as long as possible |
+
+
+
+<a name="solarium.NewGameRequest.GameMode"></a>
+
+### NewGameRequest.GameMode
+A List of valid gamemodes.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| DESERTPLANET | 0 | A survival game, where the players must work together to gather supplies and escape. |
+
 
  
 
@@ -289,16 +316,16 @@
 <a name="solarium.Solarium"></a>
 
 ### Solarium
-
+The primary GRPC interface
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| NewGame | [NewGameRequest](#solarium.NewGameRequest) | [NewGameResponse](#solarium.NewGameResponse) |  |
-| JoinGame | [JoinGameRequest](#solarium.JoinGameRequest) | [JoinGameResponse](#solarium.JoinGameResponse) |  |
-| GameUpdate | [GameUpdateRequest](#solarium.GameUpdateRequest) | [GameUpdateResponse](#solarium.GameUpdateResponse) stream |  |
-| GlobalUpdate | [GlobalUpdateRequest](#solarium.GlobalUpdateRequest) | [GlobalUpdateResponse](#solarium.GlobalUpdateResponse) stream |  |
-| DoAction | [DoActionRequest](#solarium.DoActionRequest) | [DoActionResponse](#solarium.DoActionResponse) |  |
-| GameStatus | [GameStatusRequest](#solarium.GameStatusRequest) | [GameStatusResponse](#solarium.GameStatusResponse) |  |
+| NewGame | [NewGameRequest](#solarium.NewGameRequest) | [NewGameResponse](#solarium.NewGameResponse) | Constructs a new game with the given parameters. |
+| JoinGame | [JoinGameRequest](#solarium.JoinGameRequest) | [JoinGameResponse](#solarium.JoinGameResponse) | Join an existing game |
+| GameUpdate | [GameUpdateRequest](#solarium.GameUpdateRequest) | [GameUpdateResponse](#solarium.GameUpdateResponse) stream | Subscribe to events from a given game. |
+| GlobalUpdate | [GlobalUpdateRequest](#solarium.GlobalUpdateRequest) | [GlobalUpdateResponse](#solarium.GlobalUpdateResponse) stream | Subscribe to all global events from the server, including annoucements, new game notifications etc. |
+| DoAction | [DoActionRequest](#solarium.DoActionRequest) | [DoActionResponse](#solarium.DoActionResponse) | Allows a player to perform an action in a game |
+| GameStatus | [GameStatusRequest](#solarium.GameStatusRequest) | [GameStatusResponse](#solarium.GameStatusResponse) | Single call to request the current state of the game. |
 
  
 
@@ -314,7 +341,10 @@
 <a name=".DesertPlanetAction"></a>
 
 ### DesertPlanetAction
-
+Wrapper for desert planet actions
+Only pass a single one of these, in the
+even multiple are passed, only the first
+will be used.
 
 
 | Field | Type | Label | Description |
@@ -331,8 +361,10 @@
 <a name=".DesertPlanetEvent"></a>
 
 ### DesertPlanetEvent
-## NOTIFICATIONS 
-NotificationInterface
+Wrapper for a desert planet event, these
+are all the possible events that a client can recieve
+when subscribing to the gameevent stream for a 
+desert planet type game.
 
 
 | Field | Type | Label | Description |
@@ -351,7 +383,8 @@ NotificationInterface
 <a name=".DesertPlanetFailed"></a>
 
 ### DesertPlanetFailed
-## FAILURE AND SUCCESS CONDITIONS
+A special message to indicate that the players have
+failed the scenario.
 
 
 | Field | Type | Label | Description |
@@ -441,7 +474,8 @@ A player gathered some water
 <a name=".DesertPlanetPlayerStatus"></a>
 
 ### DesertPlanetPlayerStatus
-## STATUS MESSAGES
+A status message describing the state
+of a single player.
 
 
 | Field | Type | Label | Description |
@@ -461,7 +495,8 @@ A player gathered some water
 <a name=".DesertPlanetStatus"></a>
 
 ### DesertPlanetStatus
-
+A message describing the current state of the game
+including all player statuses&#39;
 
 
 | Field | Type | Label | Description |
@@ -481,7 +516,8 @@ A player gathered some water
 <a name=".DesertPlanetSucceeded"></a>
 
 ### DesertPlanetSucceeded
-
+A special message to indiciate that the players have
+won the scenario
 
 
 | Field | Type | Label | Description |
