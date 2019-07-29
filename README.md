@@ -1,8 +1,7 @@
-![solarium](https://raw.githubusercontent.com/Chronojam/Solarium/master/doc/solarium.png)
+![solarium](https://raw.githubusercontent.com/Chronojam/Solarium/master/docs/solarium.png)
 
 Solarium
 ==
-
 
 Building Nuget Package
 
@@ -12,3 +11,7 @@ $ bazel build //proto:csharp_grpc_lib
 $ bazel run @nuget//file:downloaded -- pack 
 
 ```
+
+GRPC Documentation 
+==
+[GRPCDocs](https://raw.githubusercontent.com/Chronojam/Solarium/master/docs/docs.md)
