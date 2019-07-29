@@ -1,9 +1,8 @@
+![solarium](https://raw.githubusercontent.com/Chronojam/Solarium/master/doc/solarium.png)
+
 Solarium
-
-
-![solarium](https://raw.githubusercontent.com/chronojam/solarium/master/doc/solarium.png)
-
 ==
+
 
 Building Nuget Package
 
