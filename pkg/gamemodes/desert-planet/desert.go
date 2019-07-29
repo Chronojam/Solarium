@@ -149,7 +149,7 @@ func (d *DesertGamemode) Simulate() {
 	for {
 		// For now, dont do anything while we wait for players.
 		if len(d.Players) == 0 {
-			log.Printf("Waiting for players to join")
+			//log.Printf("Waiting for players to join")
 			continue
 		}
 		// Wait for each player to take an action before continuing

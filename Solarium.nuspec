@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Solarium</id>
-    <version>1.1.2</version>
+    <version>1.1.3</version>
     <authors>Chronojam</authors>
     <owners>calliope@chronojam.co.uk</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -11,16 +11,18 @@
     <copyright>Copyright 2019</copyright>
     <tags></tags>
     <dependencies>
-      <dependency id="Google.Protobuf" version="3.9.0-rc1" />
-      <dependency id="Grpc.Core" version="1.22.0" />
-      <dependency id="Grpc.Core.Api" version="1.22.0" />
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Google.Protobuf" version="3.9.0-rc1" />
+        <dependency id="Grpc.Core" version="1.22.0" />
+        <dependency id="Grpc.Core.Api" version="1.22.0" />
+      </group>
     </dependencies>
   </metadata>
   <files>
     <!-- netstandard 2.0, only support v2.1.503-->
     <file src="bazel-bin\proto\solarium_csharp_netstandard_v2.1.503.dll" target="lib/netstandard2.0/" />
     <!-- netcoreapp 2.1 & 2.2 -->
-    <file src="bazel-bin\proto\solarium_csharp_coreapp_v2.2.101.dll" target="lib/netcoreapp2.2/" />
-    <file src="bazel-bin\proto\solarium_csharp_coreapp_v2.1.503.dll" target="lib/netcoreapp2.1/" />
+    <!-- <file src="bazel-bin\proto\solarium_csharp_coreapp_v2.2.101.dll" target="lib/netcoreapp2.2/" />
+    <file src="bazel-bin\proto\solarium_csharp_coreapp_v2.1.503.dll" target="lib/netcoreapp2.1/" /> -->
   </files>
 </package>
