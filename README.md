@@ -14,4 +14,4 @@ $ bazel run @nuget//file:downloaded -- pack
 
 GRPC Documentation 
 ==
-[GRPCDocs](https://raw.githubusercontent.com/Chronojam/Solarium/master/docs/docs.md)
+[GRPCDocs](https://github.com/Chronojam/Solarium/blob/master/docs/docs.md)
