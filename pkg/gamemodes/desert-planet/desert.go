@@ -11,17 +11,17 @@ import (
 )
 
 var (
-	Descriptions = map[int]string{
+	Descriptions = map[solarium.NewGameRequest_DifficultyLevel]string{
 		// Easy
-		0: `Stranded on a desert planet, there are a small amount of supplies scattered within the immediate vicinity of your landing area
+		solarium.NewGameRequest_EASY: `Stranded on a desert planet, there are a small amount of supplies scattered within the immediate vicinity of your landing area
 		You must find more water & food to survive; Getting off the planet wont be easy - you'll need to gather components from the planet.
 		Fuel will allow you to travel further in a day.`,
 		// Normal
-		1: `Stranded on a desert planet, there are only a few supplies scattered within the immediate vicinity of your landing area
+		solarium.NewGameRequest_NORMAL: `Stranded on a desert planet, there are only a few supplies scattered within the immediate vicinity of your landing area
 		You must find more water & food to survive; Getting off the planet wont be easy - you'll need to gather components from the planet.
 		Fuel will allow you to travel further in a day.`,
 		// Hard
-		2: `Stranded on a desert planet, none of your gear managed to survive the crash; 
+		solarium.NewGameRequest_HARD: `Stranded on a desert planet, none of your gear managed to survive the crash; 
 		You must find more water & food to survive; Getting off the planet wont be easy - you'll need to gather components from the planet.
 		Fuel will allow you to travel further in a day.`,
 	}
@@ -31,7 +31,7 @@ var (
 // in order to escape the planet, they must try and balance
 // finding components with having enough water/food/shelter
 type DesertGamemode struct {
-	Difficulty int
+	Difficulty solarium.NewGameRequest_DifficultyLevel
 	GameStatus *proto.DesertPlanetStatus
 
 	// The group's Score'
@@ -54,11 +54,11 @@ func (d *DesertGamemode) Status() *solarium.GameStatusResponse {
 	}
 }
 
-func New(difficulty int) *DesertGamemode {
+func New(difficulty solarium.NewGameRequest_DifficultyLevel) *DesertGamemode {
 	return &DesertGamemode{
 		Difficulty:   difficulty,
 		EventStream:  make(chan *solarium.GameEvent),
-		Score:        100 + difficulty*100,
+		Score:        100 + int(difficulty)*100,
 		RoundActions: map[string]interface{}{},
 		GameStatus: &proto.DesertPlanetStatus{
 			PlayerStatus: []*proto.DesertPlanetPlayerStatus{},
@@ -277,19 +277,19 @@ func (d *DesertGamemode) ResolveRound() {
 
 func (d *DesertGamemode) Setup() {
 	switch d.Difficulty {
-	case 1:
+	case solarium.NewGameRequest_EASY:
 		d.GameStatus.Fuel = 2
 		d.GameStatus.Water = 2
 		d.GameStatus.Food = 2
 		d.GameStatus.Components = 0
 		d.GameStatus.TargetComponents = 3
-	case 2:
+	case solarium.NewGameRequest_NORMAL:
 		d.GameStatus.Fuel = 1
 		d.GameStatus.Water = 1
 		d.GameStatus.Food = 1
 		d.GameStatus.Components = 0
 		d.GameStatus.TargetComponents = 5
-	case 3:
+	case solarium.NewGameRequest_HARD:
 		d.GameStatus.Fuel = 0
 		d.GameStatus.Water = 0
 		d.GameStatus.Food = 0

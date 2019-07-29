@@ -2,15 +2,18 @@ syntax = "proto3";
 option go_package="github.com/chronojam/solarium/pkg/gamemodes/desert/proto";
 
 
-
-//// ## ACTIONS
-// ActionInterface 
-
+/*
+  Wrapper for desert planet actions
+  Only pass a single one of these, in the
+  even multiple are passed, only the first
+  will be used.
+*/
 message DesertPlanetAction {
     DesertPlanetGatherWater GatherWater = 1;
     DesertPlanetGatherFood  GatherFood = 2;
     DesertPlanetGatherComponents GatherComponents = 3;
 }
+
 // Instruct the player to gather some water.
 message DesertPlanetGatherWater {}
 // Instruct the player to gather some food.
@@ -19,8 +22,12 @@ message DesertPlanetGatherFood {}
 message DesertPlanetGatherComponents {}
 
 
-/// ## NOTIFICATIONS 
-// NotificationInterface
+/*
+  Wrapper for a desert planet event, these
+  are all the possible events that a client can recieve
+  when subscribing to the gameevent stream for a 
+  desert planet type game.
+*/
 message DesertPlanetEvent {
     DesertPlanetGatheredWater DesertPlanetGatheredWater = 1;
     DesertPlanetGatheredFood  DesertPlanetGatheredFood = 2;
@@ -45,15 +52,21 @@ message DesertPlanetGatheredComponents {
     int32 Quantity = 1;
 }
 
-/// ## FAILURE AND SUCCESS CONDITIONS
+// A special message to indicate that the players have
+// failed the scenario.
 message DesertPlanetFailed {
     int32 Score = 1;
 };
+// A special message to indiciate that the players have
+// won the scenario
 message DesertPlanetSucceeded {
     int32 Score = 1;
 };
 
-/// ## STATUS MESSAGES
+/*
+  A status message describing the state
+  of a single player.
+*/
 message DesertPlanetPlayerStatus {
     string PlayerID = 1;
     string PlayerName = 2;
@@ -62,6 +75,11 @@ message DesertPlanetPlayerStatus {
     bool Incapaciated = 5;
     repeated string Status = 6;
 }
+
+/*
+  A message describing the current state of the game
+  including all player statuses'
+*/
 message DesertPlanetStatus {
     int32 Water = 1;
     int32 Food  = 2;

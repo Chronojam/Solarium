@@ -2,6 +2,30 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 load("@io_bazel_rules_dotnet//dotnet:defs.bzl", "core_library", "DOTNET_CORE_FRAMEWORKS")
 
+## Used for documentation
+genrule(
+    name = "docs",
+    srcs = [
+        "solarium.proto",
+        "//pkg/gamemodes/desert-planet/proto:desert.proto",
+    ],
+    outs = ["docs.md"],
+    cmd = """
+        $(location @com_google_protobuf//:protoc) \
+            --plugin=$(location @com_github_pseudomuto_protoc_gen_doc//cmd/protoc-gen-doc:protoc-gen-doc) \
+            --doc_out=$(GENDIR)/proto \
+            --doc_opt=markdown,docs.md \
+            $(SRCS)
+    """,
+    tools = [
+        "@com_google_protobuf//:protoc",
+        "@com_github_pseudomuto_protoc_gen_doc//cmd/protoc-gen-doc:protoc-gen-doc",
+    ]
+)
+
+## End Docs
+
+
 proto_library(
     name = "proto_proto",
     srcs = ["solarium.proto"],
