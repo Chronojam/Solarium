@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/chronojam/solarium/pkg/gamemodes/desert-planet"
+	desert "github.com/chronojam/solarium/pkg/gamemodes/desert-planet"
 	"github.com/chronojam/solarium/pkg/namegenerator"
 
 	"github.com/google/uuid"
@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	AvaliableGameModes = map[string]func(diff int) Gamemode{
-		"DesertPlanet": func(diff int) Gamemode {
+	AvaliableGameModes = map[string]func(diff proto.NewGameRequest_DifficultyLevel) Gamemode{
+		proto.NewGameRequest_DESERTPLANET.String(): func(diff proto.NewGameRequest_DifficultyLevel) Gamemode {
 			return desert.New(diff)
 		},
 	}
@@ -73,7 +73,7 @@ func (g *Server) DispatchToGlobal(e *proto.GlobalEvent) {
 }
 
 func (g *Server) NewGame(ctx context.Context, req *proto.NewGameRequest) (*proto.NewGameResponse, error) {
-	gm, ok := AvaliableGameModes[req.Gamemode]
+	gm, ok := AvaliableGameModes[req.Gamemode.String()]
 	if !ok {
 		return &proto.NewGameResponse{}, nil
 	}
@@ -82,7 +82,7 @@ func (g *Server) NewGame(ctx context.Context, req *proto.NewGameRequest) (*proto
 		return nil, err
 	}
 	g.Listeners[guid.String()] = map[string]chan *proto.GameEvent{}
-	newGame := gm(int(req.Difficulty))
+	newGame := gm(req.Difficulty)
 	g.Games[guid.String()] = newGame
 	g.DispatchToGlobal(&proto.GlobalEvent{
 		Notification: fmt.Sprintf("A new game has started of: %v, with id: %v", req.Gamemode, guid.String()),
