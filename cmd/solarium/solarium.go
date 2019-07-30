@@ -9,7 +9,10 @@ import (
 	"google.golang.org/grpc"
 )
 
+var Version = ""
+
 func main() {
+	log.Printf("Booting Solarium... \nVersion: %v", Version)
 	grpc.EnableTracing = true
 	conn, err := net.Listen("tcp", "0.0.0.0:8443")
 	if err != nil {

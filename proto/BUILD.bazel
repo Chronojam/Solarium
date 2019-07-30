@@ -25,7 +25,6 @@ genrule(
 )
 
 ## End Docs
-
 proto_library(
     name = "proto_proto",
     srcs = ["solarium.proto"],

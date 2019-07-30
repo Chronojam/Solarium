@@ -1,0 +1,48 @@
+substitutions:
+  _ARTIFACT_BUCKET: solarium
+  # one of 'patch' 'minor' 'major'
+  _SEMVER_BUMP_TYPE: patch
+
+steps:
+  # Fetch the current version down, increment it and store it locally.
+  - name: gcr.io/cloud-builders/gsutil
+    args: [ "cp", "gs://${_ARTIFACT_BUCKET}/bin/latest", "/version/latest"]
+    volumes:
+    - name: version
+      path: /version
+
+  # Bump the version, store in the same file.
+  - name: gcr.io/cloud-builders/bazel
+    command: bash
+    args:
+    - '-c'
+    - |
+      bazel run //tools:semver -- bump ${_SEMVER_BUMP_TYPE} $$(cat /version/latest) > /version/new
+      mv /version/new /version/latest
+    volumes:
+    - name: version
+      path: /version
+
+  # Produce a build for each platform.
+  # Stamp our new version into it.
+  - name: gcr.io/cloud-builders/bazel
+    args: 
+    - '-c'
+    - |
+      bazel build --stamp --workspace_status_command=./tools/golang_version_stamper.sh --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //cmd/solarium
+      bazel build --stamp --workspace_status_command=./tools/golang_version_stamper.sh --platforms=@io_bazel_rules_go//go/toolchain:darwin_amd64 //cmd/solarium
+      bazel build --stamp --workspace_status_command=./tools/golang_version_stamper.sh --platforms=@io_bazel_rules_go//go/toolchain:windows_amd64 //cmd/solarium
+    volumes:
+    - name: version
+      path: /version
+
+  # If that all succeeds, consider our new version to be a success.
+  - name: gcr.io/cloud-builders/gsutil
+    command: bash
+    args:
+    - '-c'
+    - |
+      gsutil cp /version/latest gs://${_ARTIFACT_BUCKET}/bin/latest
+      gsutil cp bazel-bin/cmd/solarium/linux_amd64_pure_stripped/solarium gs://${_ARTIFACT_BUCKET}/bin/$$(cat /version/latest)/linux_amd64/solarium
+      gsutil cp bazel-bin/cmd/solarium/darwin_amd64_pure_stripped/solarium gs://${_ARTIFACT_BUCKET}/bin/$$(cat /version/latest)/darwin_amd64/solarium
+      gsutil cp bazel-bin/cmd/solarium/windows_amd64_pure_stripped/solarium gs://${_ARTIFACT_BUCKET}/bin/$$(cat /version/latest)/windows_amd64/solarium
