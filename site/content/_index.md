@@ -1,7 +1,7 @@
 Solarium
 ==
 
-https://api.chronojam.co.uk:8443
+tcp://api.chronojam.co.uk:8443
 ==
 
 
