@@ -26,6 +26,7 @@ steps:
   # Produce a build for each platform.
   # Stamp our new version into it.
   - name: gcr.io/cloud-builders/bazel
+    entrypoint: bash
     args: 
     - '-c'
     - |
