@@ -18,6 +18,7 @@ protobuf_deps()
 http_archive(
     name = "com_github_grpc_grpc",
     urls = ["https://github.com/grpc/grpc/archive/v1.22.0.zip"],
+    sha256 = "4fbd911c24f00432326f464d62efc69e7814263ad15b890f0aef108369a9f0a1",
     strip_prefix = "grpc-1.22.0",
 )
 
@@ -44,6 +45,7 @@ http_archive(
         "https://github.com/bazelbuild/rules_dotnet/archive/0.0.3.tar.gz",
     ],
     strip_prefix = "rules_dotnet-0.0.3",
+    sha256 = "3ba440608bedc4527239584c3958b5b6507839e2e617a6e0d0e974e300826f26",
 )
 
 load(
