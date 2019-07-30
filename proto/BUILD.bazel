@@ -10,11 +10,12 @@ genrule(
         "//pkg/gamemodes/desert-planet/proto:desert.proto",
         "//pkg/gamemodes/thewolfgame/proto:wolf.proto",
     ],
-    outs = ["docs.md"],
+    outs = ["content/docs.md"],
     cmd = """
+        mkdir -p $(GENDIR)/proto/content
         $(location @com_google_protobuf//:protoc) \
             --plugin=protoc-gen-doc=$(location @com_github_pseudomuto_protoc_gen_doc//cmd/protoc-gen-doc:protoc-gen-doc) \
-            --doc_out=$(GENDIR)/proto \
+            --doc_out=$(GENDIR)/proto/content \
             --doc_opt=markdown,docs.md \
             $(SRCS)
     """,
@@ -22,6 +23,7 @@ genrule(
         "@com_google_protobuf//:protoc",
         "@com_github_pseudomuto_protoc_gen_doc//cmd/protoc-gen-doc:protoc-gen-doc",
     ],
+    visibility = ["//visibility:public"],
 )
 
 ## End Docs

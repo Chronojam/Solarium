@@ -1,0 +1,6 @@
+baseUrl = "/"
+title = "Solarium"
+footnotereturnlinkcontents = "↩"
+[Params]
+    AuthorName = "Calliope Gardner"
+    GitHubUser = "Chronojam"
