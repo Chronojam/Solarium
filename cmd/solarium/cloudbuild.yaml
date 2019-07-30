@@ -46,7 +46,7 @@ steps:
       gsutil cp /version/latest gs://${_ARTIFACT_BUCKET}/bin/latest
       gsutil cp bazel-bin/cmd/solarium/linux_amd64_pure_stripped/solarium gs://${_ARTIFACT_BUCKET}/bin/$$(cat /version/latest)/linux_amd64/solarium
       gsutil cp bazel-bin/cmd/solarium/darwin_amd64_pure_stripped/solarium gs://${_ARTIFACT_BUCKET}/bin/$$(cat /version/latest)/darwin_amd64/solarium
-      gsutil cp bazel-bin/cmd/solarium/windows_amd64_pure_stripped/solarium gs://${_ARTIFACT_BUCKET}/bin/$$(cat /version/latest)/windows_amd64/solarium
+      gsutil cp bazel-bin/cmd/solarium/windows_amd64_pure_stripped/solarium.exe gs://${_ARTIFACT_BUCKET}/bin/$$(cat /version/latest)/windows_amd64/solarium.exe
     volumes:
     - name: version
       path: /version
