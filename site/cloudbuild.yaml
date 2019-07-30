@@ -1,0 +1,14 @@
+steps:
+  - name: gcr.io/cloud-builders/bazel
+    entrypoint: bash
+    args: 
+      - '-c'
+      - |
+        bazel build //site:solarium
+      
+      ["build", "//site:solarium"]
+    volumes:
+      - name: "site"
+        path: /site
+
+timeout: 10m

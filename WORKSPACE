@@ -114,6 +114,7 @@ http_archive(
 load("@build_stack_rules_hugo//hugo:rules.bzl", "hugo_repository", "github_hugo_theme")
 hugo_repository(
     name = "hugo",
+    version = "0.56.2",
 )
 #
 github_hugo_theme(

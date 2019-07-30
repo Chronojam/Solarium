@@ -11,28 +11,31 @@ message TheWolfGameAction {
         string PlayerId = 1;
     };
     message VoteStart {};
-    message VillagerVictory {};
-    message WerewolfVictory {};
-
-    // The ID of the player who's acting
-    string PlayerID = 1;
     // What they have voted to do
-    VoteMurder Vote = 2;
+    VoteMurder Vote = 1;
     // Special vote in order to start the game
-    VoteStart  StartVote = 3;
-    // Populated in the event of the village victory
-    VillagerVictory VillageVictory = 4;
-    // Populated in the event of a wolf victory
-    WerewolfVictory WolfVictory = 5;
+    VoteStart  StartVote = 2;
 }
 
 message TheWolfGameEvent {
+    message VillagerVictory {};
+    message WerewolfVictory {};
 
+    // Single event triggered when the game starts
+    // a temporary measure for now.
+    // TODO: Replace me with a top-level method call.
+    repeated TheWolfGameStatusPlayer Players = 1;
+
+    // Populated in the event of the village victory
+    VillagerVictory VillageVictory = 2;
+    // Populated in the event of a wolf victory
+    WerewolfVictory WolfVictory = 3;
 }
 
 message TheWolfGameStatusPlayer {
     string Name = 1;
-    bool IsAlive =2;
+    bool IsAlive = 2;
+    int32 Role = 3;
 }
 message TheWolfGameStatus {
     repeated TheWolfGameStatusPlayer Players = 1;

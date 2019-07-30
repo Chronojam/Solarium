@@ -72,8 +72,9 @@ func (t *TheWolfGamemode) NextEvent() *solarium.GameEvent {
 	e := <-t.EventStream
 	return e
 }
-func (t *TheWolfGamemode) Setup() {}
-
+func (t *TheWolfGamemode) Setup() {
+	t.GameStatus.IsNight = t.IsNight
+}
 func (t *TheWolfGamemode) Join(name string) (*solarium.Player, error) {
 	if t.GameStarted {
 		// Cant join a game in progress.
@@ -127,6 +128,26 @@ func (t *TheWolfGamemode) PlayerDoAction(req *solarium.DoActionRequest) error {
 			// GameStart condition
 			t.GameStarted = true
 			t.GameStartedChan <- true
+
+			// Send a temporary gameevent for now telling any listening client
+			// who the werewolves are.
+			// who are the wolves?
+			players := []*proto.TheWolfGameStatusPlayer{}
+			for _, p := range t.Players {
+				players = append(players, &proto.TheWolfGameStatusPlayer{
+					Name: p.Name,
+					Role: int32(p.PlayerRole),
+				})
+			}
+			t.EventStream <- &solarium.GameEvent{
+				Name: "The Werewolves have been selected",
+				Desc: "",
+				TheWolfGame: &proto.TheWolfGameEvent{
+					Players: players,
+				},
+			}
+
+			t.GameStatus.Players = players
 		}
 		return nil
 	}
@@ -250,6 +271,7 @@ func (t *TheWolfGamemode) Simulate() {
 		}
 
 		t.IsNight = !t.IsNight
+		t.GameStatus.IsNight = t.IsNight
 		t.LynchMap = map[string]int{}
 		t.GameStartedChan <- true
 		log.Printf("There are %v Villagers, and %v Wolves", len(vPlayers), len(wPlayers))

@@ -47,11 +47,11 @@
 
 - [pkg/gamemodes/thewolfgame/proto/wolf.proto](#pkg/gamemodes/thewolfgame/proto/wolf.proto)
     - [TheWolfGameAction](#.TheWolfGameAction)
-    - [TheWolfGameAction.VillagerVictory](#.TheWolfGameAction.VillagerVictory)
     - [TheWolfGameAction.VoteMurder](#.TheWolfGameAction.VoteMurder)
     - [TheWolfGameAction.VoteStart](#.TheWolfGameAction.VoteStart)
-    - [TheWolfGameAction.WerewolfVictory](#.TheWolfGameAction.WerewolfVictory)
     - [TheWolfGameEvent](#.TheWolfGameEvent)
+    - [TheWolfGameEvent.VillagerVictory](#.TheWolfGameEvent.VillagerVictory)
+    - [TheWolfGameEvent.WerewolfVictory](#.TheWolfGameEvent.WerewolfVictory)
     - [TheWolfGameStatus](#.TheWolfGameStatus)
     - [TheWolfGameStatusPlayer](#.TheWolfGameStatusPlayer)
   
@@ -572,21 +572,8 @@ Wraps all the-wolf-game actions
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| PlayerID | [string](#string) |  | The ID of the player who&#39;s acting |
 | Vote | [TheWolfGameAction.VoteMurder](#TheWolfGameAction.VoteMurder) |  | What they have voted to do |
 | StartVote | [TheWolfGameAction.VoteStart](#TheWolfGameAction.VoteStart) |  | Special vote in order to start the game |
-| VillageVictory | [TheWolfGameAction.VillagerVictory](#TheWolfGameAction.VillagerVictory) |  | Populated in the event of the village victory |
-| WolfVictory | [TheWolfGameAction.WerewolfVictory](#TheWolfGameAction.WerewolfVictory) |  | Populated in the event of a wolf victory |
-
-
-
-
-
-
-<a name=".TheWolfGameAction.VillagerVictory"></a>
-
-### TheWolfGameAction.VillagerVictory
-
 
 
 
@@ -618,19 +605,36 @@ Wraps all the-wolf-game actions
 
 
 
-<a name=".TheWolfGameAction.WerewolfVictory"></a>
-
-### TheWolfGameAction.WerewolfVictory
-
-
-
-
-
-
-
 <a name=".TheWolfGameEvent"></a>
 
 ### TheWolfGameEvent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Players | [TheWolfGameStatusPlayer](#TheWolfGameStatusPlayer) | repeated | Single event triggered when the game starts a temporary measure for now. TODO: Replace me with a top-level method call. |
+| VillageVictory | [TheWolfGameEvent.VillagerVictory](#TheWolfGameEvent.VillagerVictory) |  | Populated in the event of the village victory |
+| WolfVictory | [TheWolfGameEvent.WerewolfVictory](#TheWolfGameEvent.WerewolfVictory) |  | Populated in the event of a wolf victory |
+
+
+
+
+
+
+<a name=".TheWolfGameEvent.VillagerVictory"></a>
+
+### TheWolfGameEvent.VillagerVictory
+
+
+
+
+
+
+
+<a name=".TheWolfGameEvent.WerewolfVictory"></a>
+
+### TheWolfGameEvent.WerewolfVictory
 
 
 
@@ -664,6 +668,7 @@ Wraps all the-wolf-game actions
 | ----- | ---- | ----- | ----------- |
 | Name | [string](#string) |  |  |
 | IsAlive | [bool](#bool) |  |  |
+| Role | [int32](#int32) |  |  |
 
 
 
