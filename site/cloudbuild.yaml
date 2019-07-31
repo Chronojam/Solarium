@@ -1,3 +1,6 @@
+subsitutions:
+  _HOSTING_BUCKET: solarium.chronojam.co.uk
+
 steps:
   - name: gcr.io/cloud-builders/bazel
     entrypoint: bash
@@ -5,8 +8,13 @@ steps:
       - '-c'
       - |
         bazel build //site:solarium
-      
-      ["build", "//site:solarium"]
+        cp -r bazel-bin/site/solarium/* /site
+    volumes:
+      - name: "site"
+        path: /site
+
+  - name: gcr.io/cloud-builders/gsutil
+    args: ["cp", "/site/*", "${_HOSTING_BUCKET}"]
     volumes:
       - name: "site"
         path: /site

@@ -74,6 +74,7 @@ func (t *TheWolfGamemode) NextEvent() *solarium.GameEvent {
 }
 func (t *TheWolfGamemode) Setup() {
 	t.GameStatus.IsNight = t.IsNight
+	t.GameStatus.IsStarted = t.GameStarted
 }
 func (t *TheWolfGamemode) Join(name string) (*solarium.Player, error) {
 	if t.GameStarted {
@@ -128,6 +129,7 @@ func (t *TheWolfGamemode) PlayerDoAction(req *solarium.DoActionRequest) error {
 			// GameStart condition
 			t.GameStarted = true
 			t.GameStartedChan <- true
+			t.GameStatus.IsStarted = t.GameStarted
 
 			// Send a temporary gameevent for now telling any listening client
 			// who the werewolves are.
