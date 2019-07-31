@@ -7,7 +7,7 @@ steps:
     args: 
       - '-c'
       - |
-        bazel build //site:solarium
+        bazel build --incompatible_new_actions_api=false //site:solarium
         cp -r bazel-bin/site/solarium/* /site
     volumes:
       - name: "site"
