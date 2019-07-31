@@ -1,4 +1,4 @@
-![solarium](https://raw.githubusercontent.com/Chronojam/Solarium/master/docs/solarium.png)
+![solarium](https://raw.githubusercontent.com/Chronojam/Solarium/master/solarium.png)
 
 Solarium
 ==
