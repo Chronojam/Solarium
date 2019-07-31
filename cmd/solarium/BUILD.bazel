@@ -15,7 +15,7 @@ go_library(
 go_binary(
     name = "solarium",
     embed = [":go_default_library"],
-    visibility = ["//visibility:public"],
     pure = "on",
-    x_defs = {"Version": "{SEMVER_VERSION}"}
+    visibility = ["//visibility:public"],
+    x_defs = {"Version": "{SEMVER_VERSION}"},
 )

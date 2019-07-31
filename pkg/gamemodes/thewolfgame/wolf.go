@@ -9,6 +9,9 @@ import (
 	proto "github.com/chronojam/solarium/pkg/gamemodes/thewolfgame/proto"
 	solarium "github.com/chronojam/solarium/proto"
 	"github.com/google/uuid"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -24,9 +27,9 @@ var (
 )
 
 type TheWolfGamemode struct {
-	GameStatus *proto.TheWolfGameStatus
 	// Use a map for faster lookups.
-	Players map[string]*TheWolfGamePlayer
+	// the key is a player's SecretID
+	Players map[string]*proto.TheWolfGamePlayer
 
 	// Who voted to lynch who?
 	// key = playerId
@@ -47,15 +50,14 @@ type TheWolfGamemode struct {
 
 func New() *TheWolfGamemode {
 	return &TheWolfGamemode{
-		GameStatus:      &proto.TheWolfGameStatus{},
 		LynchMap:        map[string]int{},
-		GameStartedChan: make(chan bool),
+		GameStartedChan: make(chan bool, 2),
 		GameStartVotes:  map[string]int{},
 		GameStarted:     false,
 		IsNight:         false,
-		RoundStartChan:  make(chan bool),
+		RoundStartChan:  make(chan bool, 2),
 		EventStream:     make(chan *solarium.GameEvent),
-		Players:         map[string]*TheWolfGamePlayer{},
+		Players:         map[string]*proto.TheWolfGamePlayer{},
 	}
 }
 
@@ -63,65 +65,116 @@ func (t *TheWolfGamemode) Description() string {
 	return ""
 }
 
-func (t *TheWolfGamemode) Status() *solarium.GameStatusResponse {
-	return &solarium.GameStatusResponse{
-		TheWolfGame: t.GameStatus,
+func (t *TheWolfGamemode) Status(pid, psecret string) (*solarium.GameStatusResponse, error) {
+	// Strip role from response.
+	players := []*proto.TheWolfGamePlayer{}
+	if pid != "" && psecret != "" {
+		p, ok := t.GetPlayer(pid, psecret, true)
+		if !ok {
+			return nil, status.Errorf(codes.PermissionDenied, "Bad PlayerID/Secret")
+		}
+		players = []*proto.TheWolfGamePlayer{
+			p,
+		}
+	} else {
+		for _, p := range t.Players {
+			players = append(players, &proto.TheWolfGamePlayer{
+				ID:      p.ID,
+				Name:    p.Name,
+				IsAlive: p.IsAlive,
+			})
+		}
 	}
+	return &solarium.GameStatusResponse{
+		TheWolfGame: &proto.TheWolfGameStatus{
+			Players:   players,
+			IsNight:   t.IsNight,
+			IsStarted: t.GameStarted,
+		},
+	}, nil
 }
 func (t *TheWolfGamemode) NextEvent() *solarium.GameEvent {
 	e := <-t.EventStream
 	return e
 }
-func (t *TheWolfGamemode) Setup() {
-	t.GameStatus.IsNight = t.IsNight
-	t.GameStatus.IsStarted = t.GameStarted
-}
+func (t *TheWolfGamemode) Setup() {}
 func (t *TheWolfGamemode) Join(name string) (*solarium.Player, error) {
 	if t.GameStarted {
 		// Cant join a game in progress.
-		return nil, nil
+		return nil, status.Errorf(codes.Unavailable, "Cannot join a game in progress!")
 	}
+
+	// Generate PID + Secret.
 	pid, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
 	}
-	p := &solarium.Player{
-		Name: name,
-		ID:   pid.String(),
+	secret, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
 	}
-	// Setup the player.
-	t.Players[p.ID] = &TheWolfGamePlayer{
-		ID:         p.ID,
-		Name:       name,
-		PlayerRole: PlayerRole_Villager,
-		IsAlive:    true,
+	p := &solarium.Player{
+		Name:   name,
+		Secret: secret.String(),
+		ID:     pid.String(),
+	}
+	t.Players[secret.String()] = &proto.TheWolfGamePlayer{
+		ID:      p.ID,
+		Name:    name,
+		Role:    proto.TheWolfGamePlayer_VILLAGER,
+		IsAlive: true,
 	}
 	return p, nil
 }
 
-func (t *TheWolfGamemode) PlayerDoAction(req *solarium.DoActionRequest) error {
-	pid := req.PlayerID
-	player, ok := t.Players[pid]
-	if !ok {
-		// player doesnt exist,
-		return nil
+func (t *TheWolfGamemode) GetPlayer(pid, secret string, validateSecret bool) (*proto.TheWolfGamePlayer, bool) {
+	for s, p := range t.Players {
+		if p.ID == pid {
+			if validateSecret && s == secret {
+				// Secret is valid
+				return p, true
+			}
+			if validateSecret && s != secret {
+				// Secret is invalid.
+				return p, false
+			}
+			return p, true
+		}
 	}
-	if req.TheWolfGame == nil {
-		return nil
+
+	// PlayerID does not exist.
+	return nil, false
+}
+
+func (t *TheWolfGamemode) PlayerDoAction(a interface{}, pid, secret string) error {
+	action, ok := a.(*proto.TheWolfGameAction)
+	if !ok {
+		// This is an invalid action
+		return status.Errorf(codes.InvalidArgument, "Invalid action for TheWolfGame")
+	}
+	player, ok := t.GetPlayer(pid, secret, true)
+	if !ok {
+		return status.Errorf(codes.PermissionDenied, "PID or PSecret invalid")
 	}
 	// Start vote, only allow each player to vote once.
-	if req.TheWolfGame.StartVote != nil {
+	// and only before the game has started. Otherwise ignore their request.
+	if action.StartVote != nil && !t.GameStarted {
 		t.GameStartVotes[pid] = 1
 		if len(t.GameStartVotes) >= len(t.Players)/2 && len(t.Players) > RequiredPlayersForGame {
-			// Assign werewolves
+			// Assign werewolves, we need to alter the slice as we're iterating
+			// (in case the same person is picked twice.)
 			numWolves := len(t.Players) / 5
 			for w := 0; w < numWolves; w++ {
 				pindex := rand.Intn(len(t.Players))
 				i := 0
 				for _, p := range t.Players {
 					if i == pindex {
-						p.PlayerRole = PlayerRole_Werewolf
-						log.Printf("%v is a werewolf", p.Name)
+						// if this person is already a werewolf, run
+						// again
+						if p.Role == proto.TheWolfGamePlayer_WEREWOLF {
+							numWolves++
+						}
+						p.Role = proto.TheWolfGamePlayer_WEREWOLF
 					}
 					i++
 				}
@@ -129,27 +182,6 @@ func (t *TheWolfGamemode) PlayerDoAction(req *solarium.DoActionRequest) error {
 			// GameStart condition
 			t.GameStarted = true
 			t.GameStartedChan <- true
-			t.GameStatus.IsStarted = t.GameStarted
-
-			// Send a temporary gameevent for now telling any listening client
-			// who the werewolves are.
-			// who are the wolves?
-			players := []*proto.TheWolfGameStatusPlayer{}
-			for _, p := range t.Players {
-				players = append(players, &proto.TheWolfGameStatusPlayer{
-					Name: p.Name,
-					Role: int32(p.PlayerRole),
-				})
-			}
-			t.EventStream <- &solarium.GameEvent{
-				Name: "The Werewolves have been selected",
-				Desc: "",
-				TheWolfGame: &proto.TheWolfGameEvent{
-					Players: players,
-				},
-			}
-
-			t.GameStatus.Players = players
 		}
 		return nil
 	}
@@ -157,25 +189,45 @@ func (t *TheWolfGamemode) PlayerDoAction(req *solarium.DoActionRequest) error {
 	if !t.GameStarted {
 		return nil
 	}
-	if req.TheWolfGame.Vote == nil {
+	if !player.IsAlive {
+		// Cant vote if you are dead.
 		return nil
+	}
+	if action.Vote == nil {
+		return status.Errorf(codes.InvalidArgument, "Action was submitted, but no .Vote was nil.")
 	}
 
 	// Who are we voting for?
-	pVote := req.TheWolfGame.Vote.PlayerId
+	pVote := action.Vote.PlayerId
 
 	ActionLock.Lock()
 	defer ActionLock.Unlock()
 	if t.IsNight {
 		// Only werewolves get to do something at night
-		if player.PlayerRole == PlayerRole_Werewolf {
+		if player.Role == proto.TheWolfGamePlayer_WEREWOLF {
 			t.LynchMap[pVote] = t.LynchMap[pVote] + 1
 		}
 	} else {
 		t.LynchMap[pVote] = t.LynchMap[pVote] + 1
 	}
+	numRequired := 0
+	for _, p := range t.Players {
+		if t.IsNight {
+			if p.Role == proto.TheWolfGamePlayer_WEREWOLF && p.IsAlive {
+				numRequired++
+			}
+		} else {
+			if p.IsAlive {
+				numRequired++
+			}
+		}
+	}
+	numSubmitted := 0
+	for _, p := range t.LynchMap {
+		numSubmitted += p
+	}
 	// Check if everyone has voted
-	if len(t.LynchMap) == len(t.Players) {
+	if numSubmitted == numRequired {
 		t.RoundStartChan <- true
 	}
 	return nil
@@ -198,12 +250,12 @@ func (t *TheWolfGamemode) Simulate() {
 			if !p.IsAlive {
 				continue
 			}
-			if p.PlayerRole == PlayerRole_Villager {
+			if p.Role == proto.TheWolfGamePlayer_VILLAGER {
 				vPlayers = append(vPlayers, &solarium.Player{
 					Name: p.Name,
 				})
 			} else {
-				wPlayers = append(vPlayers, &solarium.Player{
+				wPlayers = append(wPlayers, &solarium.Player{
 					Name: p.Name,
 				})
 			}
@@ -221,28 +273,30 @@ func (t *TheWolfGamemode) Simulate() {
 			}
 		}
 
+		p, ok := t.GetPlayer(toKillID, "", false)
+		if !ok {
+			log.Printf("Players elected to lynch a player who doesnt exist")
+			log.Printf("Skipping round.")
+			continue
+		}
+
 		// RIP
-		allPlayers := append(vPlayers, wPlayers...)
-		supposedEvilDoer := ""
-		for supposedEvilDoer != "" {
-			// Pick a randomer who isnt the one who got killed
-			i := rand.Intn(len(allPlayers))
-			supposedEvilDoer = t.Players[allPlayers[i].ID].Name
-		}
-		message := fmt.Sprintf("The sun sets, the mob flys into a panic and heads to %v's house!; %v has been lynched by the mob!", t.Players[toKillID].Name, t.Players[toKillID].Name)
+		message := fmt.Sprintf("The sun sets, the mob flys into a panic and heads to %v's house!; %v has been lynched by the mob!", p.Name, p.Name)
 		if t.IsNight {
-			message = fmt.Sprintf("A glorious new day rises, but %v hasnt turned up for church! %v goes to investigate and finds them dead in bed!", t.Players[toKillID].Name, supposedEvilDoer)
+			message = fmt.Sprintf("A glorious new day rises, but %v hasnt turned up for church!", p.Name)
 		}
-		t.Players[toKillID].IsAlive = false
+		p.IsAlive = false
 		t.EventStream <- &solarium.GameEvent{
 			Name: "12 Hours Pass.",
 			Desc: message,
 			AffectedPlayers: []*solarium.Player{
 				&solarium.Player{
-					Name: t.Players[toKillID].Name,
+					Name: p.Name,
 				},
 			},
-			TheWolfGame: &proto.TheWolfGameEvent{},
+			TheWolfGame: &proto.TheWolfGameEvent{
+				PlayerDied: &proto.TheWolfGameEvent_PlayerDeath{},
+			},
 		}
 
 		// Check for win conditions
@@ -254,7 +308,9 @@ func (t *TheWolfGamemode) Simulate() {
 				InitatingPlayers: wPlayers,
 				AffectedPlayers:  vPlayers,
 				IsGameOver:       true,
-				TheWolfGame:      &proto.TheWolfGameEvent{},
+				TheWolfGame: &proto.TheWolfGameEvent{
+					WolfVictory: &proto.TheWolfGameEvent_WerewolfVictory{},
+				},
 			}
 			return
 		}
@@ -267,15 +323,14 @@ func (t *TheWolfGamemode) Simulate() {
 				InitatingPlayers: vPlayers,
 				AffectedPlayers:  wPlayers,
 				IsGameOver:       true,
-				TheWolfGame:      &proto.TheWolfGameEvent{},
+				TheWolfGame: &proto.TheWolfGameEvent{
+					VillageVictory: &proto.TheWolfGameEvent_VillagerVictory{},
+				},
 			}
 			return
 		}
 
 		t.IsNight = !t.IsNight
-		t.GameStatus.IsNight = t.IsNight
-		t.LynchMap = map[string]int{}
 		t.GameStartedChan <- true
-		log.Printf("There are %v Villagers, and %v Wolves", len(vPlayers), len(wPlayers))
 	}
 }

@@ -2,19 +2,23 @@ substitutions:
   _HOSTING_BUCKET: solarium.chronojam.co.uk
 
 steps:
+  # rules_hugo isnt exactly compatiable with the builder version of bazel...
   - name: gcr.io/cloud-builders/bazel
     entrypoint: bash
     args: 
       - '-c'
       - |
-        bazel build --incompatible_new_actions_api=false //site:solarium
-        cp -r bazel-bin/site/solarium/* /site
+        bazel build --incompatible_new_actions_api=false --incompatible_depset_is_not_iterable=false --incompatible_no_support_tools_in_action_inputs=false //site:solarium
+        cp -L -r bazel-bin/site/solarium/* /site
+        # But where are the actual files?
+        ls -lrt bazel-bin/site/solarium/
+        ls -lrt /site
     volumes:
       - name: "site"
         path: /site
 
   - name: gcr.io/cloud-builders/gsutil
-    args: ["cp", "/site/*", "${_HOSTING_BUCKET}"]
+    args: ["rsync", "-d", "-r", "/site", "gs://${_HOSTING_BUCKET}"]
     volumes:
       - name: "site"
         path: /site
