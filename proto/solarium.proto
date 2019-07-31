@@ -1,16 +1,15 @@
 syntax = "proto3";
 option go_package="github.com/chronojam/solarium/proto";
-import "pkg/gamemodes/desert-planet/proto/desert.proto";
 import "pkg/gamemodes/thewolfgame/proto/wolf.proto";
 package solarium;
 
 // The primary GRPC interface
 service Solarium {
     // Constructs a new game with the given parameters.
-    rpc NewGame(NewGameRequest) returns (NewGameResponse) {}
+    rpc NewGame(NewGameRequest) returns (SolariumGame) {}
 
     // Join an existing game
-    rpc JoinGame(JoinGameRequest) returns (JoinGameResponse) {}
+    rpc JoinGame(JoinGameRequest) returns (Player) {}
 
     // Subscribe to events from a given game.
     rpc GameUpdate(GameUpdateRequest) returns (stream GameUpdateResponse) {}
@@ -32,7 +31,6 @@ message NewGameRequest {
         // A survival game, where the players must work
         // together to gather supplies and escape.
         DESERTPLANET = 0;
-
         // A pvp game, where the objective is for the villagers
         // to route out the werewolves before they manage to kill them all!
         THEWOLFGAME = 1;
@@ -54,37 +52,22 @@ message NewGameRequest {
     DifficultyLevel Difficulty = 2;
 }
 
-message NewGameResponse {
-    // The Id with which to pass back for all queries
-    // relating to this game.
-    string GameID = 1;
-
-    // A short description of the game
-    string Description = 2;
-
-    // A name for the game, this isnt stored server side so 
-    // you can choose to use it in your client or make your own!
-    string Name = 3;
+// Represents a solarium Game
+message SolariumGame {
+    // ID is public identifier used for getting information about this game
+    string ID = 1;
+    string Name = 2;
+    string Description = 3;
 }
 
+// Join an existing game, returns a Player.
 message JoinGameRequest {
-    // The Id of the game you wish to join
+    // The Id of the game you wish to join, this is the public identifier.
     string GameID = 1;
 
     // The name of your player/character
     string Name = 2;
 }
-
-message JoinGameResponse {
-    // A special secret key used for playeractions,
-    // this should be kept hidden from other players.
-    string SecretKey = 1;
-}
-
-message GameUpdateRequest {
-    // the Id of the game you wish to subscribe to events from
-    string GameID = 1;
-};
 
 message Player {
     // The ID Of the player, in general this is also the 
@@ -92,9 +75,17 @@ message Player {
     // a secret from other clients.
     string ID = 1;
 
+    // The player secret, this is used for performing actions on the player.
+    string Secret = 2;
+
     // The Name of a player.
-    string Name = 2;
+    string Name = 3;
 }
+
+message GameUpdateRequest {
+    // the public Id of the game you wish to subscribe to events from
+    string GameID = 1;
+};
 
 message GameUpdateResponse {
     // A bulk list of recent events from the game.
@@ -115,8 +106,6 @@ message GameEvent{
     // If you recieve this, then the game is over.
     bool IsGameOver = 5;
 
-    // DesertPlanet specific events.
-    DesertPlanetEvent DesertPlanet = 6;
     TheWolfGameEvent TheWolfGame = 7;
 };
 
@@ -125,15 +114,12 @@ message DoActionRequest {
     // this is the same as the SecretKey from a
     // JoinGameResponse
     string PlayerID = 1;
+    string PlayerSecret = 2;
 
     // What gameId is this player in?
-    string GameID = 2;
+    string GameID = 3;
 
-    // DesertPlanet Specific actions,
-    // Populate me in order to perform actions
-    // in this scenario
-    DesertPlanetAction DesertPlanet = 3;
-    TheWolfGameAction TheWolfGame = 4;
+    TheWolfGameAction TheWolfGame = 5;
 };
 
 message DoActionResponse {};
@@ -151,9 +137,11 @@ message GlobalEvent {
 message GameStatusRequest {
     // The Id of the game you wish to get the status from
     string GameID = 1;
+    // Pass me if you want only status of a particular player.
+    // you will also need to pass the playerSecret here.
+    string PlayerID = 2;
+    string PlayerSecret = 3;
 }
 message GameStatusResponse {
-    // DesertPlanet specific statuses
-    DesertPlanetStatus DesertPlanet = 1;
     TheWolfGameStatus TheWolfGame = 2;
 }

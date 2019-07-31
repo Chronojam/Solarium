@@ -7,7 +7,6 @@ genrule(
     name = "docs",
     srcs = [
         "solarium.proto",
-        "//pkg/gamemodes/desert-planet/proto:desert.proto",
         "//pkg/gamemodes/thewolfgame/proto:wolf.proto",
     ],
     outs = ["content/docs.md"],
@@ -31,10 +30,7 @@ proto_library(
     name = "proto_proto",
     srcs = ["solarium.proto"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//pkg/gamemodes/desert-planet/proto:proto_proto",
-        "//pkg/gamemodes/thewolfgame/proto:proto_proto",
-    ],
+    deps = ["//pkg/gamemodes/thewolfgame/proto:proto_proto"],
 )
 
 go_proto_library(
@@ -43,10 +39,7 @@ go_proto_library(
     importpath = "github.com/chronojam/solarium/proto",
     proto = ":proto_proto",
     visibility = ["//visibility:public"],
-    deps = [
-        "//pkg/gamemodes/desert-planet/proto:go_default_library",
-        "//pkg/gamemodes/thewolfgame/proto:go_default_library",
-    ],
+    deps = ["//pkg/gamemodes/thewolfgame/proto:go_default_library"],
 )
 
 go_library(

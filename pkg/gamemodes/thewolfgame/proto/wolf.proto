@@ -22,26 +22,29 @@ message TheWolfGameEvent {
     message WerewolfVictory {};
     message PlayerDeath {};
 
-    // Single event triggered when the game starts
-    // a temporary measure for now.
-    // TODO: Replace me with a top-level method call.
-    repeated TheWolfGameStatusPlayer Players = 1;
-
     // Populated in the event of the village victory
-    VillagerVictory VillageVictory = 2;
+    VillagerVictory VillageVictory = 1;
     // Populated in the event of a wolf victory
-    WerewolfVictory WolfVictory = 3;
+    WerewolfVictory WolfVictory = 2;
     // Populated in the event someone has been killed/lynched
-    PlayerDeath PlayerDied = 4;
+    PlayerDeath PlayerDied = 3;
 }
 
-message TheWolfGameStatusPlayer {
-    string Name = 1;
-    bool IsAlive = 2;
-    int32 Role = 3;
+message TheWolfGamePlayer {
+    enum PlayerRole {
+        VILLAGER = 0;
+        WEREWOLF = 1;
+    }
+    // Public fields, anyone can query these.
+    string ID = 1;
+    string Name = 2;
+    bool IsAlive = 3;
+
+    // Private fields, only get these if you also pass the playerSecret.
+    PlayerRole Role = 4;
 }
 message TheWolfGameStatus {
-    repeated TheWolfGameStatusPlayer Players = 1;
+    repeated TheWolfGamePlayer Players = 1;
     bool IsNight = 3;
     bool IsStarted = 4;
 }
