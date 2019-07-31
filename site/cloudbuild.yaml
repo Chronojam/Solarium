@@ -15,7 +15,7 @@ steps:
         path: /site
 
   - name: gcr.io/cloud-builders/gsutil
-    args: ["cp", "/site/*", "${_HOSTING_BUCKET}"]
+    args: ["cp", "-r", "/site/*", "${_HOSTING_BUCKET}"]
     volumes:
       - name: "site"
         path: /site
