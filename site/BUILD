@@ -18,6 +18,6 @@ hugo_site(
         "//site/content:_index.md",
         "//proto:docs",
     ],
-    quiet = True,
+    quiet = False,
     theme = ":xmin",
 )

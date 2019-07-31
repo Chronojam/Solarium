@@ -6,7 +6,7 @@ go_library(
     importpath = "github.com/chronojam/solarium/cmd/client",
     visibility = ["//visibility:private"],
     deps = [
-        "//pkg/gamemodes/desert/proto:go_default_library",
+        "//pkg/gamemodes/thewolfgame/proto:go_default_library",
         "//proto:go_default_library",
         "@org_golang_google_grpc//:go_default_library",
     ],

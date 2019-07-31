@@ -51,11 +51,11 @@ type TheWolfGamemode struct {
 func New() *TheWolfGamemode {
 	return &TheWolfGamemode{
 		LynchMap:        map[string]int{},
-		GameStartedChan: make(chan bool),
+		GameStartedChan: make(chan bool, 2),
 		GameStartVotes:  map[string]int{},
 		GameStarted:     false,
 		IsNight:         false,
-		RoundStartChan:  make(chan bool),
+		RoundStartChan:  make(chan bool, 2),
 		EventStream:     make(chan *solarium.GameEvent),
 		Players:         map[string]*proto.TheWolfGamePlayer{},
 	}
@@ -157,18 +157,24 @@ func (t *TheWolfGamemode) PlayerDoAction(a interface{}, pid, secret string) erro
 		return status.Errorf(codes.PermissionDenied, "PID or PSecret invalid")
 	}
 	// Start vote, only allow each player to vote once.
-	if action.StartVote != nil {
+	// and only before the game has started. Otherwise ignore their request.
+	if action.StartVote != nil && !t.GameStarted {
 		t.GameStartVotes[pid] = 1
 		if len(t.GameStartVotes) >= len(t.Players)/2 && len(t.Players) > RequiredPlayersForGame {
-			// Assign werewolves
+			// Assign werewolves, we need to alter the slice as we're iterating
+			// (in case the same person is picked twice.)
 			numWolves := len(t.Players) / 5
 			for w := 0; w < numWolves; w++ {
 				pindex := rand.Intn(len(t.Players))
 				i := 0
 				for _, p := range t.Players {
 					if i == pindex {
+						// if this person is already a werewolf, run
+						// again
+						if p.Role == proto.TheWolfGamePlayer_WEREWOLF {
+							numWolves++
+						}
 						p.Role = proto.TheWolfGamePlayer_WEREWOLF
-						log.Printf("%v is a werewolf", p.Name)
 					}
 					i++
 				}
@@ -206,12 +212,22 @@ func (t *TheWolfGamemode) PlayerDoAction(a interface{}, pid, secret string) erro
 	}
 	numRequired := 0
 	for _, p := range t.Players {
-		if p.IsAlive {
-			numRequired++
+		if t.IsNight {
+			if p.Role == proto.TheWolfGamePlayer_WEREWOLF && p.IsAlive {
+				numRequired++
+			}
+		} else {
+			if p.IsAlive {
+				numRequired++
+			}
 		}
 	}
+	numSubmitted := 0
+	for _, p := range t.LynchMap {
+		numSubmitted += p
+	}
 	// Check if everyone has voted
-	if len(t.LynchMap) == numRequired {
+	if numSubmitted == numRequired {
 		t.RoundStartChan <- true
 	}
 	return nil
@@ -315,7 +331,6 @@ func (t *TheWolfGamemode) Simulate() {
 		}
 
 		t.IsNight = !t.IsNight
-		t.LynchMap = map[string]int{}
 		t.GameStartedChan <- true
 	}
 }
