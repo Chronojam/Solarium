@@ -1,4 +1,4 @@
-load("//third_party/build_stack_rules_hugo/hugo:rules.bzl", "hugo_site", "hugo_theme")
+load("@build_stack_rules_hugo//hugo:rules.bzl", "hugo_site", "hugo_theme")
 
 # Declare a theme 'xmin'.  In this case the `name` and
 # `theme_name` are identical, so the `theme_name` could be omitted in this case.
