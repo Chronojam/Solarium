@@ -107,7 +107,7 @@ gazelle_dependencies()
 http_archive(
     name = "build_stack_rules_hugo",
     url = "https://github.com/stackb/rules_hugo/archive/f6dbf50d06c4f46592ac0faaf02c396a39166695.zip",
-    #sha256 = RULES_HUGO_SHA256,
+    sha256 = "60459756576853148db04fb32fa79b2fb37eb58b2a1c95ad38e6e26b4fd39cdb",
     strip_prefix = "rules_hugo-f6dbf50d06c4f46592ac0faaf02c396a39166695",
 )
 
