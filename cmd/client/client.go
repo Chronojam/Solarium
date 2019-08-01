@@ -1,11 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"io"
 	"log"
-	"time"
+	"os"
 
 	wolfproto "github.com/chronojam/solarium/pkg/gamemodes/thewolfgame/proto"
 	proto "github.com/chronojam/solarium/proto"
@@ -44,16 +45,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
-	joinNewPlayer(resp.ID, "Chronojam", client)
-	joinNewPlayer(resp.ID, "Chronojam1", client)
-	joinNewPlayer(resp.ID, "Chronojam2", client)
-	joinNewPlayer(resp.ID, "Chronojam3", client)
-	joinNewPlayer(resp.ID, "Chronojam4", client)
-	joinNewPlayer(resp.ID, "Chronojam5", client)
-	joinNewPlayer(resp.ID, "Chronojam6", client)
-	joinNewPlayer(resp.ID, "Chronojam7", client)
-	joinNewPlayer(resp.ID, "Chronojam8", client)
-	joinNewPlayer(resp.ID, "Chronojam9", client)
+	joinNewPlayer(resp.ID, "James", client)
+	joinNewPlayer(resp.ID, "Jenna", client)
+	joinNewPlayer(resp.ID, "Kylie", client)
+	joinNewPlayer(resp.ID, "Fergus", client)
+	joinNewPlayer(resp.ID, "BoggyPete", client)
+	joinNewPlayer(resp.ID, "Nicola", client)
+	joinNewPlayer(resp.ID, "xXPvpGodXx", client)
+	joinNewPlayer(resp.ID, "Toestomper", client)
+	joinNewPlayer(resp.ID, "Applepresser", client)
+	joinNewPlayer(resp.ID, "Delimeats", client)
 
 	for _, p := range pMap {
 		log.Printf("Registered Player: %v", p.Name)
@@ -76,11 +77,18 @@ func main() {
 			}
 			for _, e := range not.Events {
 				log.Printf("%v", e)
+				if e.IsGameOver {
+					// end the game.
+					log.Fatalf("Game Over!")
+				}
 			}
 		}
 	}()
 
 	// Get everyone to vote to start
+	log.Printf("Waiting for input to start voteStart()")
+	input := bufio.NewScanner(os.Stdin)
+	input.Scan()
 	for _, p := range pMap {
 		client.DoAction(context.Background(), &proto.DoActionRequest{
 			PlayerID:     p.ID,
@@ -128,6 +136,9 @@ func main() {
 		// Choose someone to get killed
 		ded := villagers[vindex]
 		vindex++
+		log.Printf("Waiting for input to vote.")
+		input := bufio.NewScanner(os.Stdin)
+		input.Scan()
 
 		// Everyone votes the same for testings.
 		for _, p := range pMap {
@@ -145,14 +156,13 @@ func main() {
 			log.Printf("%v has voted", p.ID)
 		}
 
-		time.Sleep(10 * time.Second)
 		log.Printf("Fetching new status")
 		stat, _ := client.GameStatus(context.Background(), &proto.GameStatusRequest{
 			GameID: resp.ID,
 		})
-		b, _ := json.MarshalIndent(stat, "", "  ")
+		_, _ = json.MarshalIndent(stat, "", "  ")
 		log.Printf("A new round is starting!")
-		log.Printf("%v", string(b))
+		//log.Printf("%v", string(b))
 	}
 
 	/*

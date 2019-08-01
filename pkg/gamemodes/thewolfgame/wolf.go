@@ -20,12 +20,6 @@ const (
 	WerewolvesPerPlayer    = 0.4
 )
 
-var (
-	// ActionLock to prevent race conditions if both players declare actions at the
-	// same time.
-	ActionLock = sync.Mutex{}
-)
-
 type TheWolfGamemode struct {
 	// Use a map for faster lookups.
 	// the key is a player's SecretID
@@ -35,6 +29,9 @@ type TheWolfGamemode struct {
 	// key = playerId
 	// value = number of votes
 	LynchMap map[string]int
+	// ActionLock to prevent race conditions if both players declare actions at the
+	// same time.
+	ActionLock sync.Mutex
 
 	GameStartVotes  map[string]int
 	GameStartedChan chan bool
@@ -46,6 +43,7 @@ type TheWolfGamemode struct {
 	IsNight bool
 
 	EventStream chan *solarium.GameEvent
+	Running     bool
 }
 
 func New() *TheWolfGamemode {
@@ -58,11 +56,16 @@ func New() *TheWolfGamemode {
 		RoundStartChan:  make(chan bool, 2),
 		EventStream:     make(chan *solarium.GameEvent),
 		Players:         map[string]*proto.TheWolfGamePlayer{},
+		Running:         true,
+		ActionLock:      sync.Mutex{},
 	}
 }
 
 func (t *TheWolfGamemode) Description() string {
 	return ""
+}
+func (t *TheWolfGamemode) IsRunning() bool {
+	return t.Running
 }
 
 func (t *TheWolfGamemode) Status(pid, psecret string) (*solarium.GameStatusResponse, error) {
@@ -124,6 +127,15 @@ func (t *TheWolfGamemode) Join(name string) (*solarium.Player, error) {
 		Role:    proto.TheWolfGamePlayer_VILLAGER,
 		IsAlive: true,
 	}
+	t.EventStream <- &solarium.GameEvent{
+		Name: "A Player has joined!",
+		Desc: "",
+		TheWolfGame: &proto.TheWolfGameEvent{
+			NewPlayer: &proto.TheWolfGameEvent_PlayerJoined{
+				PlayerName: name,
+			},
+		},
+	}
 	return p, nil
 }
 
@@ -156,6 +168,9 @@ func (t *TheWolfGamemode) PlayerDoAction(a interface{}, pid, secret string) erro
 	if !ok {
 		return status.Errorf(codes.PermissionDenied, "PID or PSecret invalid")
 	}
+
+	t.ActionLock.Lock()
+	defer t.ActionLock.Unlock()
 	// Start vote, only allow each player to vote once.
 	// and only before the game has started. Otherwise ignore their request.
 	if action.StartVote != nil && !t.GameStarted {
@@ -182,7 +197,19 @@ func (t *TheWolfGamemode) PlayerDoAction(a interface{}, pid, secret string) erro
 			// GameStart condition
 			t.GameStarted = true
 			t.GameStartedChan <- true
+			t.EventStream <- &solarium.GameEvent{
+				Name: "The Game has started",
+				Desc: "",
+				TheWolfGame: &proto.TheWolfGameEvent{
+					GameStart: &proto.TheWolfGameEvent_GameStarted{},
+				},
+			}
 		}
+		return nil
+	}
+
+	if action.StartVote != nil && t.GameStarted {
+		// Game's already started, so ignore StartVote's
 		return nil
 	}
 	// Dont allow anyone to do anything until the game has started
@@ -199,9 +226,6 @@ func (t *TheWolfGamemode) PlayerDoAction(a interface{}, pid, secret string) erro
 
 	// Who are we voting for?
 	pVote := action.Vote.PlayerId
-
-	ActionLock.Lock()
-	defer ActionLock.Unlock()
 	if t.IsNight {
 		// Only werewolves get to do something at night
 		if player.Role == proto.TheWolfGamePlayer_WEREWOLF {
@@ -238,9 +262,11 @@ func (t *TheWolfGamemode) Simulate() {
 		// Wait here until the game is ready to start
 		// this is to avoid infinite for {} (and thus max cpu usage.)
 		<-t.GameStartedChan
+		log.Printf("GSPass")
 
 		// Wait for each player to take an action before continuing.
 		<-t.RoundStartChan
+		log.Printf("RoundStarPAss")
 
 		// The Grouping of players who are still alive
 		// expressed as solarium.Players.
@@ -287,15 +313,23 @@ func (t *TheWolfGamemode) Simulate() {
 		}
 		p.IsAlive = false
 		t.EventStream <- &solarium.GameEvent{
-			Name: "12 Hours Pass.",
+			Name: "A Horrible Murder",
 			Desc: message,
-			AffectedPlayers: []*solarium.Player{
-				&solarium.Player{
-					Name: p.Name,
+			TheWolfGame: &proto.TheWolfGameEvent{
+				PlayerDied: &proto.TheWolfGameEvent_PlayerDeath{
+					PlayerID:   p.ID,
+					PlayerName: p.Name,
 				},
 			},
+		}
+		t.IsNight = !t.IsNight
+		t.EventStream <- &solarium.GameEvent{
+			Name: "TimeTransistion",
+			Desc: "",
 			TheWolfGame: &proto.TheWolfGameEvent{
-				PlayerDied: &proto.TheWolfGameEvent_PlayerDeath{},
+				Transisition: &proto.TheWolfGameEvent_TimeTransistion{
+					IsNight: t.IsNight,
+				},
 			},
 		}
 
@@ -303,11 +337,9 @@ func (t *TheWolfGamemode) Simulate() {
 		if len(wPlayers) == len(vPlayers) {
 			// Wolves Win
 			t.EventStream <- &solarium.GameEvent{
-				Name:             "Werewolf Victory",
-				Desc:             fmt.Sprintf("The werewolves have overcome the town."),
-				InitatingPlayers: wPlayers,
-				AffectedPlayers:  vPlayers,
-				IsGameOver:       true,
+				Name:       "Werewolf Victory",
+				Desc:       fmt.Sprintf("The werewolves have overcome the town."),
+				IsGameOver: true,
 				TheWolfGame: &proto.TheWolfGameEvent{
 					WolfVictory: &proto.TheWolfGameEvent_WerewolfVictory{},
 				},
@@ -318,11 +350,9 @@ func (t *TheWolfGamemode) Simulate() {
 		if len(wPlayers) == 0 {
 			// Villagers win
 			t.EventStream <- &solarium.GameEvent{
-				Name:             "Villager Victory",
-				Desc:             fmt.Sprintf("The werewolves have been purged from the town."),
-				InitatingPlayers: vPlayers,
-				AffectedPlayers:  wPlayers,
-				IsGameOver:       true,
+				Name:       "Villager Victory",
+				Desc:       fmt.Sprintf("The werewolves have been purged from the town."),
+				IsGameOver: true,
 				TheWolfGame: &proto.TheWolfGameEvent{
 					VillageVictory: &proto.TheWolfGameEvent_VillagerVictory{},
 				},
@@ -330,7 +360,7 @@ func (t *TheWolfGamemode) Simulate() {
 			return
 		}
 
-		t.IsNight = !t.IsNight
+		t.LynchMap = map[string]int{}
 		t.GameStartedChan <- true
 	}
 }

@@ -12,6 +12,7 @@ type Gamemode interface {
 	PlayerDoAction(a interface{}, pid, secret string) error
 	NextEvent() *proto.GameEvent
 	Status(pid, psecret string) (*proto.GameStatusResponse, error)
+	IsRunning() bool
 }
 
 type Server struct {

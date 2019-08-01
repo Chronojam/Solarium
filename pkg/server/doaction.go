@@ -16,6 +16,9 @@ func (g *Server) DoAction(ctx context.Context, req *proto.DoActionRequest) (*pro
 		return &proto.DoActionResponse{},
 			status.Errorf(codes.NotFound, "GameID %v not a valid game", req.GameID)
 	}
+	if !game.IsRunning() {
+		return &proto.DoActionResponse{}, status.Errorf(codes.Unavailable, "Game is not running!")
+	}
 	// Also check if we've got a playerId and a secret key, because if we dont then also
 	// return an error.
 	if req.GetPlayerID() == "" || req.GetPlayerSecret() == "" {

@@ -28,12 +28,9 @@ service Solarium {
 message NewGameRequest {
     // A List of valid gamemodes.
     enum GameMode {
-        // A survival game, where the players must work
-        // together to gather supplies and escape.
-        DESERTPLANET = 0;
         // A pvp game, where the objective is for the villagers
         // to route out the werewolves before they manage to kill them all!
-        THEWOLFGAME = 1;
+        THEWOLFGAME = 0;
     }
     // A List of valid difficulties.
     enum DifficultyLevel {
@@ -98,15 +95,10 @@ message GameEvent{
     // The Description of the event.
     string Desc = 2;
 
-    // A list of players who initiated this event
-    repeated Player InitatingPlayers = 3;
-    // A list of players who are affected by this event
-    repeated Player AffectedPlayers = 4;
-
     // If you recieve this, then the game is over.
-    bool IsGameOver = 5;
+    bool IsGameOver = 3;
 
-    TheWolfGameEvent TheWolfGame = 7;
+    TheWolfGameEvent TheWolfGame = 4;
 };
 
 message DoActionRequest {

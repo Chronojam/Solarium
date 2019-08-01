@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/chronojam/solarium/pkg/namegenerator"
 	proto "github.com/chronojam/solarium/proto"
@@ -44,6 +45,8 @@ func (g *Server) StartGame(game Gamemode, id string) {
 		game.Simulate()
 		log.Printf("Cleaning Up")
 		// Cleanup after game is done.
+		// but wait 10seconds so people can get the latest updates
+		time.Sleep(10 * time.Second)
 		delete(g.Games, id)
 		delete(g.Listeners, id)
 	}()

@@ -17,7 +17,7 @@ func (g *Server) GameUpdate(req *proto.GameUpdateRequest, stream proto.Solarium_
 		// Game doesnt exist, or never existed.
 		if err := stream.Send(&proto.GameUpdateResponse{Events: []*proto.GameEvent{
 			&proto.GameEvent{
-				Desc:       "This game is already over!",
+				Desc:       "This game doesnt exist, or is over!",
 				IsGameOver: true,
 			},
 		}}); err != nil {
