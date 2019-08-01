@@ -10,7 +10,7 @@ import (
 )
 
 func (g *Server) GlobalUpdate(req *proto.GlobalUpdateRequest, stream proto.Solarium_GlobalUpdateServer) error {
-	me := make(chan *proto.GlobalEvent)
+	me := make(chan *proto.GlobalEvent, 10)
 	cid, err := uuid.NewRandom()
 	if err != nil {
 		return err

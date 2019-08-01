@@ -38,19 +38,17 @@ func New() *Server {
 
 func (g *Server) DispatchToGameID(idi string, event *proto.GameEvent) {
 	for id, listeners := range g.Listeners {
+		// Check if its the right game
 		if id == idi {
+			// send the event to all listeners.
 			for _, lis := range listeners {
-				go func() {
-					lis <- event
-				}()
+				lis <- event
 			}
 		}
 	}
 }
 func (g *Server) DispatchToGlobal(e *proto.GlobalEvent) {
 	for _, lis := range g.GlobalListeners {
-		go func() {
-			lis <- e
-		}()
+		lis <- e
 	}
 }

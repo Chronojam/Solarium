@@ -25,6 +25,7 @@ func (g *Server) NewGame(ctx context.Context, req *proto.NewGameRequest) (*proto
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("%v gid", guid.String())
 	g.Listeners[guid.String()] = map[string]chan *proto.GameEvent{}
 	newGame := gm(req.Difficulty)
 	g.Games[guid.String()] = newGame
@@ -53,6 +54,7 @@ func (g *Server) StartGame(game Gamemode, id string) {
 	go func() {
 		for {
 			e := game.NextEvent()
+			log.Printf("Game has emitted an event, sending dispatching to listeners...")
 			g.DispatchToGameID(id, e)
 		}
 	}()

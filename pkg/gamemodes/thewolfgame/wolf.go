@@ -54,7 +54,7 @@ func New() *TheWolfGamemode {
 		GameStarted:     false,
 		IsNight:         false,
 		RoundStartChan:  make(chan bool, 2),
-		EventStream:     make(chan *solarium.GameEvent),
+		EventStream:     make(chan *solarium.GameEvent, 10),
 		Players:         map[string]*proto.TheWolfGamePlayer{},
 		Running:         true,
 		ActionLock:      sync.Mutex{},
@@ -76,8 +76,18 @@ func (t *TheWolfGamemode) Status(pid, psecret string) (*solarium.GameStatusRespo
 		if !ok {
 			return nil, status.Errorf(codes.PermissionDenied, "Bad PlayerID/Secret")
 		}
-		players = []*proto.TheWolfGamePlayer{
-			p,
+
+		if p.Role == proto.TheWolfGamePlayer_WEREWOLF {
+			// get all the werewolves
+			for _, cplayer := range t.Players {
+				if cplayer.Role == proto.TheWolfGamePlayer_WEREWOLF {
+					players = append(players, cplayer)
+				}
+			}
+		} else {
+			players = []*proto.TheWolfGamePlayer{
+				p,
+			}
 		}
 	} else {
 		for _, p := range t.Players {
@@ -169,16 +179,14 @@ func (t *TheWolfGamemode) PlayerDoAction(a interface{}, pid, secret string) erro
 		return status.Errorf(codes.PermissionDenied, "PID or PSecret invalid")
 	}
 
-	t.ActionLock.Lock()
-	defer t.ActionLock.Unlock()
 	// Start vote, only allow each player to vote once.
 	// and only before the game has started. Otherwise ignore their request.
 	if action.StartVote != nil && !t.GameStarted {
 		t.GameStartVotes[pid] = 1
-		if len(t.GameStartVotes) >= len(t.Players)/2 && len(t.Players) > RequiredPlayersForGame {
+		if len(t.GameStartVotes) >= len(t.Players)/2 && len(t.Players) >= RequiredPlayersForGame {
 			// Assign werewolves, we need to alter the slice as we're iterating
 			// (in case the same person is picked twice.)
-			numWolves := len(t.Players) / 5
+			numWolves := len(t.Players) / RequiredPlayersForGame
 			for w := 0; w < numWolves; w++ {
 				pindex := rand.Intn(len(t.Players))
 				i := 0
@@ -189,12 +197,14 @@ func (t *TheWolfGamemode) PlayerDoAction(a interface{}, pid, secret string) erro
 						if p.Role == proto.TheWolfGamePlayer_WEREWOLF {
 							numWolves++
 						}
+						log.Printf("%v is a werewolf", p.Name)
 						p.Role = proto.TheWolfGamePlayer_WEREWOLF
 					}
 					i++
 				}
 			}
 			// GameStart condition
+			log.Printf("Starting Game")
 			t.GameStarted = true
 			t.GameStartedChan <- true
 			t.EventStream <- &solarium.GameEvent{
@@ -223,6 +233,8 @@ func (t *TheWolfGamemode) PlayerDoAction(a interface{}, pid, secret string) erro
 	if action.Vote == nil {
 		return status.Errorf(codes.InvalidArgument, "Action was submitted, but no .Vote was nil.")
 	}
+	t.ActionLock.Lock()
+	defer t.ActionLock.Unlock()
 
 	// Who are we voting for?
 	pVote := action.Vote.PlayerId
@@ -251,6 +263,7 @@ func (t *TheWolfGamemode) PlayerDoAction(a interface{}, pid, secret string) erro
 		numSubmitted += p
 	}
 	// Check if everyone has voted
+	log.Printf("%v: %v", numSubmitted, numRequired)
 	if numSubmitted == numRequired {
 		t.RoundStartChan <- true
 	}
@@ -262,11 +275,12 @@ func (t *TheWolfGamemode) Simulate() {
 		// Wait here until the game is ready to start
 		// this is to avoid infinite for {} (and thus max cpu usage.)
 		<-t.GameStartedChan
-		log.Printf("GSPass")
 
 		// Wait for each player to take an action before continuing.
 		<-t.RoundStartChan
-		log.Printf("RoundStarPAss")
+
+		// Dont allow people to take actions while we're processing the round.
+		t.ActionLock.Lock()
 
 		// The Grouping of players who are still alive
 		// expressed as solarium.Players.
@@ -361,6 +375,7 @@ func (t *TheWolfGamemode) Simulate() {
 		}
 
 		t.LynchMap = map[string]int{}
+		t.ActionLock.Unlock()
 		t.GameStartedChan <- true
 	}
 }

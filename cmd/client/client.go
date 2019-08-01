@@ -14,12 +14,13 @@ import (
 )
 
 var (
-	pMap = []*proto.Player{}
+	pMap   = []*proto.Player{}
+	GameID = "26598f3d-c358-4a13-8476-afde20b08a2e"
 )
 
-func joinNewPlayer(gid, name string, client proto.SolariumClient) {
+func joinNewPlayer(name string, client proto.SolariumClient) {
 	p, err := client.JoinGame(context.Background(), &proto.JoinGameRequest{
-		GameID: gid,
+		GameID: GameID,
 		Name:   name,
 	})
 	if err != nil {
@@ -38,23 +39,25 @@ func main() {
 	//defer conn.Close()
 
 	client := proto.NewSolariumClient(conn)
-	resp, err := client.NewGame(context.Background(), &proto.NewGameRequest{
+	/*resp, err := client.NewGame(context.Background(), &proto.NewGameRequest{
 		Gamemode:   proto.NewGameRequest_THEWOLFGAME,
 		Difficulty: 1,
 	})
 	if err != nil {
 		log.Fatalf("%v", err)
-	}
-	joinNewPlayer(resp.ID, "James", client)
-	joinNewPlayer(resp.ID, "Jenna", client)
-	joinNewPlayer(resp.ID, "Kylie", client)
-	joinNewPlayer(resp.ID, "Fergus", client)
-	joinNewPlayer(resp.ID, "BoggyPete", client)
-	joinNewPlayer(resp.ID, "Nicola", client)
-	joinNewPlayer(resp.ID, "xXPvpGodXx", client)
-	joinNewPlayer(resp.ID, "Toestomper", client)
-	joinNewPlayer(resp.ID, "Applepresser", client)
-	joinNewPlayer(resp.ID, "Delimeats", client)
+	}*/
+	//GameID = resp.ID
+	GameID = "c060ae56-d8f5-41e8-8d4c-fed538a9f983"
+	joinNewPlayer("James", client)
+	joinNewPlayer("Jenna", client)
+	joinNewPlayer("Kylie", client)
+	joinNewPlayer("Fergus", client)
+	joinNewPlayer("BoggyPete", client)
+	joinNewPlayer("Nicola", client)
+	joinNewPlayer("xXPvpGodXx", client)
+	joinNewPlayer("Toestomper", client)
+	joinNewPlayer("Applepresser", client)
+	joinNewPlayer("Delimeats", client)
 
 	for _, p := range pMap {
 		log.Printf("Registered Player: %v", p.Name)
@@ -62,7 +65,7 @@ func main() {
 	// Get Generic game events.
 	go func() {
 		stream, err := client.GameUpdate(context.Background(), &proto.GameUpdateRequest{
-			GameID: resp.ID,
+			GameID: GameID,
 		})
 		if err != nil {
 			log.Fatalf("%v", err)
@@ -93,7 +96,7 @@ func main() {
 		client.DoAction(context.Background(), &proto.DoActionRequest{
 			PlayerID:     p.ID,
 			PlayerSecret: p.Secret,
-			GameID:       resp.ID,
+			GameID:       GameID,
 			TheWolfGame: &wolfproto.TheWolfGameAction{
 				StartVote: &wolfproto.TheWolfGameAction_VoteStart{},
 			},
@@ -106,7 +109,7 @@ func main() {
 	for _, p := range pMap {
 		// Now everyone checks if they are a werewolf.
 		me, _ := client.GameStatus(context.Background(), &proto.GameStatusRequest{
-			GameID:       resp.ID,
+			GameID:       GameID,
 			PlayerID:     p.ID,
 			PlayerSecret: p.Secret,
 		})
@@ -119,11 +122,10 @@ func main() {
 		}
 	}
 
-	vindex := 0
 	for {
 		// Get the state of the game
 		status, err := client.GameStatus(context.Background(), &proto.GameStatusRequest{
-			GameID: resp.ID,
+			GameID: GameID,
 		})
 		if err != nil {
 			log.Fatalf("%v", err)
@@ -134,8 +136,15 @@ func main() {
 		log.Printf("Preparing the lynch")
 
 		// Choose someone to get killed
-		ded := villagers[vindex]
-		vindex++
+		vindex := 0
+		for i, p := range villagers {
+			if p.IsAlive {
+				vindex = i
+				p.IsAlive = !p.IsAlive
+				break
+			}
+		}
+		v := villagers[vindex]
 		log.Printf("Waiting for input to vote.")
 		input := bufio.NewScanner(os.Stdin)
 		input.Scan()
@@ -145,10 +154,10 @@ func main() {
 			_, _ = client.DoAction(context.Background(), &proto.DoActionRequest{
 				PlayerID:     p.ID,
 				PlayerSecret: p.Secret,
-				GameID:       resp.ID,
+				GameID:       GameID,
 				TheWolfGame: &wolfproto.TheWolfGameAction{
 					Vote: &wolfproto.TheWolfGameAction_VoteMurder{
-						PlayerId: ded.ID,
+						PlayerId: v.ID,
 					},
 				},
 			})
@@ -158,7 +167,7 @@ func main() {
 
 		log.Printf("Fetching new status")
 		stat, _ := client.GameStatus(context.Background(), &proto.GameStatusRequest{
-			GameID: resp.ID,
+			GameID: GameID,
 		})
 		_, _ = json.MarshalIndent(stat, "", "  ")
 		log.Printf("A new round is starting!")

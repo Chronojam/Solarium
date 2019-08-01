@@ -25,7 +25,7 @@ func (g *Server) GameUpdate(req *proto.GameUpdateRequest, stream proto.Solarium_
 		}
 		return nil
 	}
-	me := make(chan *proto.GameEvent)
+	me := make(chan *proto.GameEvent, 10)
 	cid, err := uuid.NewRandom()
 	if err != nil {
 		return status.Errorf(codes.Internal, "Oh No")
